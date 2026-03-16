@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Syne', sans-serif; color: var(--text-main); }
+        .text-primary { color: var(--primary); }
+        .text-muted { color: var(--text-muted); }
+
+        .glass {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .glass:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            transform: translateY(-1px);
+        }
+
+        nav {
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding-bottom: 5px;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover { color: var(--primary); }
+
+        .nav-link.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .page { display: none; animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(15px); }
+        .page.active { display: block; }
+
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* HERO SECTION */
+        .hero { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .hero h1 { font-size: 4rem; margin-bottom: 16px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+        .typewriter { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; height: 30px; font-weight: 400; }
+        
+        .upload-zone {
+            width: 100%;
+            max-width: 550px;
+            height: 280px;
+            border: 2px dashed #94a3b8;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-bottom: 40px;
+            cursor: pointer;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: scale(1.02);
+        }
+        .upload-zone svg { stroke: var(--primary); margin-bottom: 20px; }
+
+        /* RESULTS */
+        .results-grid { display: grid; grid-template-columns: 1.2fr 2fr; gap: 30px; }
+        @media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } }
+        
+        .card { padding: 40px; height: 100%; }
+        
+        /* SCORE RING */
+        .score-ring { width: 220px; height: 220px; margin: 0 auto 30px; display: block; filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2)); }
+        .score-circle-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+        .score-circle { 
+            fill: none; stroke: var(--success); stroke-width: 8; stroke-linecap: round; 
+            stroke-dasharray: 440; stroke-dashoffset: 440; 
+            animation: fillRing 1.5s forwards ease-out 0.5s; 
+        }
+        .score-text { fill: var(--text-main); font-size: 42px; font-weight: 800; font-family: 'Syne', sans-serif; text-anchor: middle; dominant-baseline: middle; }
+        @keyframes fillRing { to { stroke-dashoffset: calc(440 - (440 * 85) / 100); } }
+
+        /* PROGRESS BARS */
+        .bar-wrap { margin-bottom: 24px; }
+        .bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 500; font-size: 0.95rem; }
+        .bar-value { color: var(--text-muted); font-size: 0.9rem; }
+        .bar-bg { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+
+        /* CHIPS */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .chip { padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; }
+        .chip-good { background: #d1fae5; color: #047857; }
+        .chip-bad { background: #fee2e2; color: #b91c1c; }
+
+        /* JOBS */
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
+        .job-card { position: relative; padding: 30px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); transition: all 0.3s; box-shadow: var(--shadow-sm); }
+        .job-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: #cbd5e1; }
+        .job-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .job-company { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; font-weight: 500; }
+        .match-badge { position: absolute; top: 24px; right: 24px; background: #eff6ff; color: var(--primary); padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+        
+        .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        @media (max-width: 768px) { .tips-grid { grid-template-columns: 1fr; } }
+        .tip-card { border-top: 4px solid var(--primary); padding: 24px; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+        .tip-card h4 { margin-bottom: 12px; font-size: 1.1rem; }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <span class="nav-link active" onclick="showPage('upload')">Upload</span>
+        <span class="nav-link" onclick="showPage('results')">Analysis Results</span>
+        <span class="nav-link" onclick="showPage('jobs')">Job Matches</span>
+    </nav>
+
+    <div class="container">
+        
+        <!-- PAGE 1: UPLOAD -->
+        <main id="upload" class="page active">
+            <div class="hero">
+                <h1>Analyze your resume.<br><span class="text-primary">Stand out.</span></h1>
+                <div class="typewriter" id="typewriter"></div>
+                
+                <div class="upload-zone">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">Drag & Drop Resume</p>
+                    <p class="text-muted" style="font-size: 0.95rem;">PDF or DOCX up to 5MB</p>
+                </div>
+
+                <button class="btn" onclick="showPage('results')" style="padding: 16px 40px; font-size: 1.1rem;">Start Analysis</button>
+            </div>
+        </main>
+
+        <!-- PAGE 2: RESULTS -->
+        <main id="results" class="page">
+            <div style="margin-bottom: 48px; text-align: center;">
+                <h2 style="font-size: 3rem; margin-bottom: 12px;">Analysis <span class="text-primary">Results</span></h2>
+                <p class="text-muted" style="font-size: 1.1rem;">Targeting: Software Engineer Roles</p>
+            </div>
+
+            <div class="results-grid">
+                <!-- Score Card -->
+                <div class="card glass text-center" style="display: flex; flex-direction: column; justify-content: center;">
+                    <h3 style="margin-bottom: 40px; font-size: 1.5rem;">ATS Compatibility</h3>
+                    <svg class="score-ring" viewBox="0 0 160 160">
+                        <circle class="score-circle-bg" cx="80" cy="80" r="70"></circle>
+                        <circle class="score-circle" cx="80" cy="80" r="70" transform="rotate(-90 80 80)"></circle>
+                        <text class="score-text" x="80" y="85">85%</text>
+                    </svg>
+                    <p class="text-muted" style="font-size: 1.05rem; line-height: 1.6;">Strong match! Your resume is highly optimized for technical parsing systems.</p>
+                </div>
+
+                <!-- Sections & Skills -->
+                <div style="display: flex; flex-direction: column; gap: 30px;">
+                    <div class="card glass">
+                        <h3 style="margin-bottom: 30px; font-size: 1.4rem;">Section Breakdown</h3>
+                        <div class="bar-wrap">
+                            <div class="bar-label"><span>Experience</span><span class="bar-value">90%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 90%;"></div></div>
+                        </div>
+                        <div class="bar-wrap">
+                            <div class="bar-label"><span>Education</span><span class="bar-value">100%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 100%;"></div></div>
+                        </div>
+                        <div class="bar-wrap">
+                            <div class="bar-label"><span>Skills Match</span><span class="bar-value">75%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 75%; background: var(--success);"></div></div>
+                        </div>
+                        <div class="bar-wrap">
+                            <div class="bar-label"><span>Formatting</span><span class="bar-value">80%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 80%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="card glass">
+                        <h3 style="margin-bottom: 20px; font-size: 1.4rem;">Keyword Impact</h3>
+                        <div class="chips-container" style="margin-bottom: 30px;">
+                            <span class="chip chip-good">React</span>
+                            <span class="chip chip-good">Python</span>
+                            <span class="chip chip-good">TypeScript</span>
+                            <span class="chip chip-good">REST APIs</span>
+                            <span class="chip chip-good">Docker</span>
+                        </div>
+                        
+                        <h4 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px;">Missing Keywords</h4>
+                        <div class="chips-container">
+                            <span class="chip chip-bad">GraphQL</span>
+                            <span class="chip chip-bad">Kubernetes</span>
+                            <span class="chip chip-bad">CI/CD Pipeline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center" style="margin-top: 50px;">
+                <button class="btn" onclick="showPage('jobs')" style="padding: 16px 40px; font-size: 1.1rem;">View Job Recommendations</button>
+            </div>
+        </main>
+
+        <!-- PAGE 3: JOBS -->
+        <main id="jobs" class="page">
+            <div style="margin-bottom: 50px; text-align: center;">
+                <h2 style="font-size: 3rem; margin-bottom: 12px;">Recommended <span class="text-primary">Roles</span></h2>
+                <p class="text-muted" style="font-size: 1.1rem;">Based on your 85% profile match</p>
+            </div>
+
+            <div class="jobs-grid">
+                <div class="job-card">
+                    <div class="match-badge">92% Match</div>
+                    <div class="job-title">Frontend Engineer</div>
+                    <div class="job-company">Stripe • Remote</div>
+                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Build next-generation payment interfaces using React and modern TypeScript practices.</p>
+                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
+                </div>
+                <div class="job-card">
+                    <div class="match-badge" style="background: #ecfdf5; color: #047857;">85% Match</div>
+                    <div class="job-title">Full Stack Developer</div>
+                    <div class="job-company">Vercel • San Francisco</div>
+                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Develop scalable and robust APIs with Python alongside high-performance modern web frontends.</p>
+                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
+                </div>
+                <div class="job-card">
+                    <div class="match-badge" style="background: #fef2f2; color: #b91c1c;">78% Match</div>
+                    <div class="job-title">Software Engineer</div>
+                    <div class="job-company">GitHub • Remote</div>
+                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Contribute to foundational core infrastructure. Direct experience with Docker orchestration required.</p>
+                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 30px; font-size: 1.8rem; text-align: center;">Optimization Strategies</h3>
+                <div class="tips-grid">
+                    <div class="tip-card">
+                        <h4 style="margin-bottom: 12px; color: var(--primary);">Quantify Impact</h4>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Enhance your experience bullet points by attaching concrete metrics (e.g., "Increased system performance by 40%").</p>
+                    </div>
+                    <div class="tip-card">
+                        <h4 style="margin-bottom: 12px; color: var(--primary);">Integrate Core Skills</h4>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Strategically insert 'GraphQL' and 'CI/CD' into your projects section if you possess relevant experience to boost your score.</p>
+                    </div>
+                    <div class="tip-card">
+                        <h4 style="margin-bottom: 12px; color: var(--primary);">Use Action Verbs</h4>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Initiate each bullet point with strong, confident action verbs such as "Architected", "Engineered", or "Optimized".</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            let index = ['upload', 'results', 'jobs'].indexOf(pageId);
+            document.querySelectorAll('.nav-link')[index].classList.add('active');
+        }
+
+        // Professional Typewriter Effect
+        const words = ["ATS optimization.", "Skill detection.", "Job matching.", "Career acceleration."];
+        let i = 0, timer;
+        const el = document.getElementById("typewriter");
+
+        function typingEffect() {
+            let word = words[i].split("");
+            let loopTyping = () => {
+                if (word.length > 0) {
+                    el.innerHTML += word.shift();
+                } else {
+                    setTimeout(deletingEffect, 2500);
+                    return;
+                }
+                setTimeout(loopTyping, 60);
+            };
+            loopTyping();
+        }
+
+        function deletingEffect() {
+            let word = words[i].split("");
+            let loopDeleting = () => {
+                if (word.length > 0) {
+                    word.pop();
+                    el.innerHTML = word.join("");
+                } else {
+                    i = (i + 1) % words.length;
+                    typingEffect();
+                    return;
+                }
+                setTimeout(loopDeleting, 30);
+            };
+            loopDeleting();
+        }
+        
+        typingEffect();
+    </script>
+</body>
+</html>
