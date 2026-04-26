@@ -3,32 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Analyzer & Builder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@600;700;800&family=Roboto:wght@400;500;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>AI Resume Analyzer & Builder Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --danger: #ef4444;
-            --radius-lg: 16px;
-            --radius-md: 12px;
-            --radius-sm: 8px;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --bg: #0a0a0f;
+            --surface: rgba(255,255,255,0.04);
+            --surface-solid: #14141f;
+            --primary: #a78bfa;
+            --primary-hover: #c4b5fd;
+            --accent: #818cf8;
+            --text-main: #e8e8ef;
+            --text-muted: #6b6b80;
+            --border: rgba(255,255,255,0.08);
+            --success: #34d399;
+            --danger: #f87171;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+            --glow: 0 0 30px rgba(167,139,250,0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: var(--bg);
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(167,139,250,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(129,140,248,0.05) 0%, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             overflow-x: hidden;
@@ -36,43 +41,47 @@
             -webkit-print-color-adjust: exact;
         }
 
-        h1, h2, h3, h4 { font-family: 'Syne', sans-serif; color: var(--text-main); }
+        h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; color: var(--text-main); }
         .text-primary { color: var(--primary); }
+        .text-success { color: var(--success); }
         .text-muted { color: var(--text-muted); }
+        .text-center { text-align: center; }
 
         .glass {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.35s cubic-bezier(.4,0,.2,1);
         }
 
         .glass:hover {
-            box-shadow: var(--shadow-lg);
-            border-color: #cbd5e1;
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), var(--glow);
+            border-color: rgba(167,139,250,0.2);
+            transform: translateY(-3px);
         }
 
         .btn {
-            background: var(--primary);
-            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #0a0a0f;
             border: none;
             padding: 12px 28px;
             border-radius: var(--radius-sm);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
             text-decoration: none;
             display: inline-block;
         }
 
         .btn:hover {
-            background: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(167,139,250,0.35);
+            transform: translateY(-2px) scale(1.02);
+            filter: brightness(1.1);
         }
 
         /* NAVIGATION */
@@ -81,7 +90,9 @@
             display: flex;
             justify-content: center;
             gap: 40px;
-            background: var(--surface);
+            background: rgba(10,10,15,0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -98,6 +109,7 @@
             padding-bottom: 5px;
             font-weight: 500;
             font-size: 1.05rem;
+            border-bottom: 2px solid transparent;
         }
         
         .nav-link:hover { color: var(--primary); }
@@ -117,16 +129,38 @@
         .page.active { display: block; }
 
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* BUILDER STYLES */
-        .builder-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 40px;
+        .hidden { display: none !important; }
+
+        /* HERO SECTION */
+        .hero { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .hero h1 { font-size: 4rem; margin-bottom: 16px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+        .typewriter { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; height: 30px; font-weight: 400; }
+        
+        .upload-zone {
+            width: 100%;
+            max-width: 550px;
+            height: 280px;
+            border: 2px dashed rgba(167,139,250,0.3);
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.35s cubic-bezier(.4,0,.2,1);
+            margin-bottom: 25px;
+            cursor: pointer;
         }
-        @media (max-width: 900px) {
-            .builder-grid { grid-template-columns: 1fr; }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(167,139,250,0.08);
+            transform: scale(1.02);
+            box-shadow: var(--glow);
         }
+        .upload-zone svg { stroke: var(--primary); margin-bottom: 20px; }
 
         .form-group {
             margin-bottom: 20px;
@@ -145,12 +179,54 @@
             border-radius: var(--radius-sm);
             font-family: inherit;
             font-size: 1rem;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-main);
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+        }
+
+        /* DASHBOARD METRICS */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .metric-card {
+            padding: 30px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .metric-label {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* RESULTS STYLES */
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 { color: var(--primary); margin-top: 25px; margin-bottom: 15px; }
+        .markdown-content ul, .markdown-content ol { padding-left: 20px; margin-bottom: 15px; }
+        .markdown-content li { margin-bottom: 8px; }
+        .markdown-content strong { color: var(--text-main); }
+        .markdown-content p { margin-bottom: 15px; }
+
+        /* BUILDER STYLES */
+        .builder-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 40px;
+        }
+        @media (max-width: 900px) {
+            .builder-grid { grid-template-columns: 1fr; }
         }
 
         .resume-preview {
@@ -163,90 +239,27 @@
         }
 
         @media print {
-            body { background: white; }
-            nav, .card:first-child, .hero, .score-ring { display: none !important; }
-            .container { padding: 0; max-width: 100%; }
-            .page { animation: none !important; transform: none !important; opacity: 1 !important; display: block !important;}
-            .builder-grid { display: block; }
-            .resume-preview { box-shadow: none; border: none; padding: 0; height: auto; min-height: 0; }
+            body * { visibility: hidden !important; }
+            #resume-preview-container, #resume-preview-container * { visibility: visible !important; }
+            #resume-preview-container {
+                position: absolute; left: 0; top: 0; width: 100%;
+                box-shadow: none !important; border: none !important;
+                padding: 40px !important; margin: 0 !important;
+                min-height: 0 !important; background: white !important;
+                color: #000 !important;
+            }
+            #resume-preview-container h1, #resume-preview-container h3,
+            #resume-preview-container p, #resume-preview-container li,
+            #resume-preview-container strong, #resume-preview-container span { color: inherit !important; }
+            nav, .container > *:not(#builder) { display: none !important; }
         }
-
-        /* HERO SECTION */
-        .hero { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .hero h1 { font-size: 4rem; margin-bottom: 16px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-        .typewriter { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; height: 30px; font-weight: 400; }
-        
-        .upload-zone {
-            width: 100%;
-            max-width: 550px;
-            height: 280px;
-            border: 2px dashed #94a3b8;
-            border-radius: var(--radius-lg);
-            background: var(--surface);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            margin-bottom: 40px;
-            cursor: pointer;
-        }
-        .upload-zone:hover {
-            border-color: var(--primary);
-            background: #eff6ff;
-            transform: scale(1.02);
-        }
-        .upload-zone svg { stroke: var(--primary); margin-bottom: 20px; }
-
-        /* RESULTS */
-        .results-grid { display: grid; grid-template-columns: 1.2fr 2fr; gap: 30px; }
-        @media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } }
-        
-        .card { padding: 40px; height: 100%; }
-        
-        /* SCORE RING */
-        .score-ring { width: 220px; height: 220px; margin: 0 auto 30px; display: block; filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2)); }
-        .score-circle-bg { fill: none; stroke: var(--border); stroke-width: 8; }
-        .score-circle { 
-            fill: none; stroke: var(--success); stroke-width: 8; stroke-linecap: round; 
-            stroke-dasharray: 440; stroke-dashoffset: 440; 
-            animation: fillRing 1.5s forwards ease-out 0.5s; 
-        }
-        .score-text { fill: var(--text-main); font-size: 42px; font-weight: 800; font-family: 'Syne', sans-serif; text-anchor: middle; dominant-baseline: middle; }
-        @keyframes fillRing { to { stroke-dashoffset: calc(440 - (440 * 85) / 100); } }
-
-        /* PROGRESS BARS */
-        .bar-wrap { margin-bottom: 24px; }
-        .bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 500; font-size: 0.95rem; }
-        .bar-value { color: var(--text-muted); font-size: 0.9rem; }
-        .bar-bg { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
-
-        /* CHIPS */
-        .chips-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-        .chip { padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; }
-        .chip-good { background: #d1fae5; color: #047857; }
-        .chip-bad { background: #fee2e2; color: #b91c1c; }
-
-        /* JOBS */
-        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
-        .job-card { position: relative; padding: 30px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); transition: all 0.3s; box-shadow: var(--shadow-sm); }
-        .job-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: #cbd5e1; }
-        .job-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
-        .job-company { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; font-weight: 500; }
-        .match-badge { position: absolute; top: 24px; right: 24px; background: #eff6ff; color: var(--primary); padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
-        
-        .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        @media (max-width: 768px) { .tips-grid { grid-template-columns: 1fr; } }
-        .tip-card { border-top: 4px solid var(--primary); padding: 24px; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
-        .tip-card h4 { margin-bottom: 12px; font-size: 1.1rem; }
-
     </style>
 </head>
 <body>
 
     <nav>
-        <span class="nav-link active" onclick="showPage('upload')">Upload</span>
+        <span class="nav-link active" onclick="showPage('dashboard')">Dashboard</span>
+        <span class="nav-link" onclick="showPage('upload')">Upload Resume</span>
         <span class="nav-link" onclick="showPage('results')">Analysis Results</span>
         <span class="nav-link" onclick="showPage('jobs')">Job Matches</span>
         <span class="nav-link" onclick="showPage('builder')">Resume Builder</span>
@@ -254,21 +267,57 @@
 
     <div class="container">
         
-        <!-- PAGE 1: UPLOAD -->
-        <main id="upload" class="page active">
+        <!-- PAGE 0: DASHBOARD -->
+        <main id="dashboard" class="page active">
             <div class="hero">
+                <h1>AI-Powered <br><span class="text-primary">Career Command Center</span></h1>
+                <p class="text-muted" style="font-size: 1.2rem; margin-bottom: 40px; max-width: 600px;">Elevate your professional trajectory with intelligent resume analysis, automated job matching, and our native resume builder.</p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <button class="btn" onclick="showPage('upload')" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 30px;">Analyze Resume</button>
+                    <button class="btn" onclick="showPage('builder')" style="padding: 16px 40px; font-size: 1.1rem; background: transparent; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px;">Build New Resume</button>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="card glass metric-card">
+                    <div class="metric-value">1</div>
+                    <div class="metric-label">Upload your Resume</div>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Provide your current resume in PDF format.</p>
+                </div>
+                <div class="card glass metric-card">
+                    <div class="metric-value">2</div>
+                    <div class="metric-label">AI Deep Analysis</div>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Our AI scores your resume and finds keyword gaps.</p>
+                </div>
+                <div class="card glass metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Smart Job Match</div>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Get curated job recommendations based on your profile.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE 1: UPLOAD -->
+        <main id="upload" class="page">
+            <div class="hero" style="min-height: 60vh;">
                 <h1>Analyze your resume.<br><span class="text-primary">Stand out.</span></h1>
                 <div class="typewriter" id="typewriter"></div>
                 
-                <div class="upload-zone">
+                <input type="file" id="pdf-upload" accept=".pdf" style="display: none;" onchange="uploadPDF()">
+                <div class="upload-zone" onclick="document.getElementById('pdf-upload').click()">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">Drag & Drop Resume</p>
-                    <p class="text-muted" style="font-size: 0.95rem;">PDF or DOCX up to 5MB</p>
+                    <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">Click to Upload Resume</p>
+                    <p class="text-muted" style="font-size: 0.95rem;">PDF file up to 5MB</p>
+                    <div id="upload-status" style="margin-top: 15px; color: var(--success); font-weight: 600;"></div>
+                </div>
+
+                <div class="form-group" style="width: 100%; max-width: 550px; margin-bottom: 30px;">
+                    <label class="form-label" style="text-align: left;">Target Job Role (Required for Analysis)</label>
+                    <input type="text" id="job-role" class="form-control" placeholder="e.g. Senior Frontend Developer, Data Scientist">
                 </div>
 
                 <div style="display: flex; gap: 16px;">
-                    <button class="btn" onclick="showPage('results')" style="padding: 16px 40px; font-size: 1.1rem;">Start Analysis</button>
-                    <button class="btn" onclick="showPage('builder')" style="padding: 16px 40px; font-size: 1.1rem; background: var(--surface); color: var(--primary); border: 1px solid var(--primary);">Build a Resume Natively</button>
+                    <button class="btn" id="analyze-btn" onclick="analyzeResume()" style="padding: 16px 40px; font-size: 1.1rem;">Start Analysis</button>
                 </div>
             </div>
         </main>
@@ -277,114 +326,40 @@
         <main id="results" class="page">
             <div style="margin-bottom: 48px; text-align: center;">
                 <h2 style="font-size: 3rem; margin-bottom: 12px;">Analysis <span class="text-primary">Results</span></h2>
-                <p class="text-muted" style="font-size: 1.1rem;">Targeting: Software Engineer Roles</p>
+                <p class="text-muted" style="font-size: 1.1rem;">Detailed AI Feedback</p>
+            </div>
+            
+            <div id="analysis-loader" class="text-center hidden" style="margin: 50px 0;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 15px; font-weight: 600;">AI is analyzing your resume...</p>
             </div>
 
-            <div class="results-grid">
-                <!-- Score Card -->
-                <div class="card glass text-center" style="display: flex; flex-direction: column; justify-content: center;">
-                    <h3 style="margin-bottom: 40px; font-size: 1.5rem;">ATS Compatibility</h3>
-                    <svg class="score-ring" viewBox="0 0 160 160">
-                        <circle class="score-circle-bg" cx="80" cy="80" r="70"></circle>
-                        <circle class="score-circle" cx="80" cy="80" r="70" transform="rotate(-90 80 80)"></circle>
-                        <text class="score-text" x="80" y="85">85%</text>
-                    </svg>
-                    <p class="text-muted" style="font-size: 1.05rem; line-height: 1.6;">Strong match! Your resume is highly optimized for technical parsing systems.</p>
-                </div>
-
-                <!-- Sections & Skills -->
-                <div style="display: flex; flex-direction: column; gap: 30px;">
-                    <div class="card glass">
-                        <h3 style="margin-bottom: 30px; font-size: 1.4rem;">Section Breakdown</h3>
-                        <div class="bar-wrap">
-                            <div class="bar-label"><span>Experience</span><span class="bar-value">90%</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width: 90%;"></div></div>
-                        </div>
-                        <div class="bar-wrap">
-                            <div class="bar-label"><span>Education</span><span class="bar-value">100%</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width: 100%;"></div></div>
-                        </div>
-                        <div class="bar-wrap">
-                            <div class="bar-label"><span>Skills Match</span><span class="bar-value">75%</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width: 75%; background: var(--success);"></div></div>
-                        </div>
-                        <div class="bar-wrap">
-                            <div class="bar-label"><span>Formatting</span><span class="bar-value">80%</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width: 80%;"></div></div>
-                        </div>
-                    </div>
-
-                    <div class="card glass">
-                        <h3 style="margin-bottom: 20px; font-size: 1.4rem;">Keyword Impact</h3>
-                        <div class="chips-container" style="margin-bottom: 30px;">
-                            <span class="chip chip-good">React</span>
-                            <span class="chip chip-good">Python</span>
-                            <span class="chip chip-good">TypeScript</span>
-                            <span class="chip chip-good">REST APIs</span>
-                            <span class="chip chip-good">Docker</span>
-                        </div>
-                        
-                        <h4 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px;">Missing Keywords</h4>
-                        <div class="chips-container">
-                            <span class="chip chip-bad">GraphQL</span>
-                            <span class="chip chip-bad">Kubernetes</span>
-                            <span class="chip chip-bad">CI/CD Pipeline</span>
-                        </div>
-                    </div>
+            <div class="card glass markdown-content" id="analysis-result-container" style="min-height: 400px; padding: 40px;">
+                <div id="analysis-result">
+                    <p class="text-muted text-center" style="margin-top: 100px; font-size: 1.1rem;">Upload a resume and start analysis to see results here.</p>
                 </div>
             </div>
             
-            <div class="text-center" style="margin-top: 50px;">
-                <button class="btn" onclick="showPage('jobs')" style="padding: 16px 40px; font-size: 1.1rem;">View Job Recommendations</button>
+            <div class="text-center" style="margin-top: 50px;" id="generate-jobs-container">
+                <button class="btn" onclick="suggestJobs()" style="padding: 16px 40px; font-size: 1.1rem; background: var(--success);">Generate Job Recommendations</button>
             </div>
         </main>
 
         <!-- PAGE 3: JOBS -->
         <main id="jobs" class="page">
             <div style="margin-bottom: 50px; text-align: center;">
-                <h2 style="font-size: 3rem; margin-bottom: 12px;">Recommended <span class="text-primary">Roles</span></h2>
-                <p class="text-muted" style="font-size: 1.1rem;">Based on your 85% profile match</p>
+                <h2 style="font-size: 3rem; margin-bottom: 12px;">Recommended <span class="text-success">Roles</span></h2>
+                <p class="text-muted" style="font-size: 1.1rem;">AI-Matched opportunities for your profile</p>
             </div>
 
-            <div class="jobs-grid">
-                <div class="job-card">
-                    <div class="match-badge">92% Match</div>
-                    <div class="job-title">Frontend Engineer</div>
-                    <div class="job-company">Stripe • Remote</div>
-                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Build next-generation payment interfaces using React and modern TypeScript practices.</p>
-                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
-                </div>
-                <div class="job-card">
-                    <div class="match-badge" style="background: #ecfdf5; color: #047857;">85% Match</div>
-                    <div class="job-title">Full Stack Developer</div>
-                    <div class="job-company">Vercel • San Francisco</div>
-                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Develop scalable and robust APIs with Python alongside high-performance modern web frontends.</p>
-                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
-                </div>
-                <div class="job-card">
-                    <div class="match-badge" style="background: #fef2f2; color: #b91c1c;">78% Match</div>
-                    <div class="job-title">Software Engineer</div>
-                    <div class="job-company">GitHub • Remote</div>
-                    <p class="text-muted" style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">Contribute to foundational core infrastructure. Direct experience with Docker orchestration required.</p>
-                    <button class="btn" style="width: 100%; text-align: center;">Apply Now</button>
-                </div>
+            <div id="jobs-loader" class="text-center hidden" style="margin: 50px 0;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--success); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 15px; font-weight: 600;">Finding the best roles for you...</p>
             </div>
 
-            <div>
-                <h3 style="margin-bottom: 30px; font-size: 1.8rem; text-align: center;">Optimization Strategies</h3>
-                <div class="tips-grid">
-                    <div class="tip-card">
-                        <h4 style="margin-bottom: 12px; color: var(--primary);">Quantify Impact</h4>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Enhance your experience bullet points by attaching concrete metrics (e.g., "Increased system performance by 40%").</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4 style="margin-bottom: 12px; color: var(--primary);">Integrate Core Skills</h4>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Strategically insert 'GraphQL' and 'CI/CD' into your projects section if you possess relevant experience to boost your score.</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4 style="margin-bottom: 12px; color: var(--primary);">Use Action Verbs</h4>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Initiate each bullet point with strong, confident action verbs such as "Architected", "Engineered", or "Optimized".</p>
-                    </div>
+            <div class="card glass markdown-content" id="jobs-result-container" style="min-height: 400px; padding: 40px;">
+                <div id="jobs-result">
+                    <p class="text-muted text-center" style="margin-top: 100px; font-size: 1.1rem;">Generate job recommendations from the Results tab to see them here.</p>
                 </div>
             </div>
         </main>
@@ -398,7 +373,7 @@
 
             <div class="builder-grid">
                 <!-- Editor / Controls -->
-                <div class="card glass" style="align-self: start;">
+                <div class="card glass" style="align-self: start; padding: 30px;">
                     <h3 style="margin-bottom: 25px; font-size: 1.4rem;">Theme Settings</h3>
                     
                     <div class="form-group">
@@ -443,8 +418,8 @@
                         <textarea id="resume-summary-input" rows="5" class="form-control">Creative and detail-oriented product designer with 6+ years of experience in crafting user-centric digital experiences. Proven track record of improving user engagement and translating complex requirements into beautiful interfaces.</textarea>
                     </div>
 
-                    <button class="btn" style="width: 100%; margin-top: 20px; font-size: 1.1rem;" onclick="window.print()">Download as PDF</button>
-                    <p class="text-muted" style="text-align: center; margin-top: 15px; font-size: 0.9rem;">(Save as PDF using your browser's print dialog)</p>
+                    <button class="btn" style="width: 100%; margin-top: 20px; font-size: 1.1rem;" onclick="downloadResumePDF()">Download as PDF</button>
+                    <p class="text-muted" style="text-align: center; margin-top: 15px; font-size: 0.9rem;">(Opens print dialog — select "Save as PDF")</p>
                 </div>
 
                 <!-- Live Preview Result -->
@@ -503,13 +478,16 @@
     </div>
 
     <script>
+        // Data State
+        let currentResumeText = "";
+
         // Page Navigation
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             
             document.getElementById(pageId).classList.add('active');
-            let tabs = ['upload', 'results', 'jobs', 'builder'];
+            let tabs = ['dashboard', 'upload', 'results', 'jobs', 'builder'];
             let index = tabs.indexOf(pageId);
             if (index !== -1) {
                 document.querySelectorAll('.nav-link')[index].classList.add('active');
@@ -518,12 +496,12 @@
 
         // Professional Typewriter Effect
         const words = ["ATS optimization.", "Skill detection.", "Job matching.", "Career acceleration."];
-        let i = 0, timer;
+        let typeIndex = 0;
         const el = document.getElementById("typewriter");
 
         function typingEffect() {
             if(!el) return;
-            let word = words[i].split("");
+            let word = words[typeIndex].split("");
             let loopTyping = () => {
                 if (word.length > 0) {
                     el.innerHTML += word.shift();
@@ -538,13 +516,13 @@
 
         function deletingEffect() {
             if(!el) return;
-            let word = words[i].split("");
+            let word = words[typeIndex].split("");
             let loopDeleting = () => {
                 if (word.length > 0) {
                     word.pop();
                     el.innerHTML = word.join("");
                 } else {
-                    i = (i + 1) % words.length;
+                    typeIndex = (typeIndex + 1) % words.length;
                     typingEffect();
                     return;
                 }
@@ -552,8 +530,130 @@
             };
             loopDeleting();
         }
-        
         typingEffect();
+
+
+        // Application Logic
+        async function uploadPDF() {
+            const fileInput = document.getElementById("pdf-upload");
+            const statusDiv = document.getElementById("upload-status");
+            
+            if (!fileInput.files.length) {
+                return;
+            }
+
+            const file = fileInput.files[0];
+            statusDiv.style.color = "var(--text-main)";
+            statusDiv.innerText = "Extracting text from PDF...";
+            
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/api/extract_pdf", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    statusDiv.style.color = "var(--danger)";
+                    statusDiv.innerText = data.error;
+                } else {
+                    currentResumeText = data.text;
+                    statusDiv.style.color = "var(--success)";
+                    statusDiv.innerText = `Successfully loaded: ${file.name} \n(${currentResumeText.length} characters)`;
+                }
+            } catch (e) {
+                statusDiv.style.color = "var(--danger)";
+                statusDiv.innerText = "Error uploading file. Make sure the server is running.";
+            }
+        }
+
+        async function analyzeResume() {
+            const jobRole = document.getElementById("job-role").value;
+            if (!currentResumeText) {
+                alert("Please upload a resume first.");
+                return;
+            }
+            if (!jobRole.trim()) {
+                alert("Please enter a target job role.");
+                return;
+            }
+
+            // Move to Results page
+            showPage('results');
+            
+            const loader = document.getElementById("analysis-loader");
+            const resultBox = document.getElementById("analysis-result");
+            
+            loader.classList.remove("hidden");
+            resultBox.classList.add("hidden");
+            
+            try {
+                const response = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        resume_text: currentResumeText,
+                        job_role: jobRole
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                    showPage('upload');
+                } else {
+                    resultBox.innerHTML = marked.parse(data.result);
+                    resultBox.classList.remove("hidden");
+                }
+            } catch (e) {
+                alert("Error analyzing resume.");
+                showPage('upload');
+            } finally {
+                loader.classList.add("hidden");
+            }
+        }
+
+        async function suggestJobs() {
+            if (!currentResumeText) {
+                alert("Please upload a resume first in the Upload tab.");
+                showPage('upload');
+                return;
+            }
+            
+            // Move to Jobs page
+            showPage('jobs');
+            
+            const loader = document.getElementById("jobs-loader");
+            const resultBox = document.getElementById("jobs-result");
+            
+            loader.classList.remove("hidden");
+            resultBox.classList.add("hidden");
+            
+            try {
+                const response = await fetch("/api/suggest_jobs", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        resume_text: currentResumeText
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    resultBox.innerHTML = marked.parse(data.result);
+                    resultBox.classList.remove("hidden");
+                }
+            } catch (e) {
+                alert("Error suggesting jobs.");
+            } finally {
+                loader.classList.add("hidden");
+            }
+        }
 
 
         // Builder Logic
@@ -613,6 +713,11 @@
                     previewPhoto.src = '';
                 }
             });
+        }
+
+        // PDF Download - only prints the resume preview
+        function downloadResumePDF() {
+            window.print();
         }
     </script>
 </body>
