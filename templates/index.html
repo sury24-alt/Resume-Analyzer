@@ -133,6 +133,49 @@
 
         .hidden { display: none !important; }
 
+        /* Toast Notification */
+        .toast {
+            position: fixed; top: 80px; right: 24px; z-index: 9999;
+            padding: 16px 24px; border-radius: var(--radius-sm);
+            font-weight: 500; font-size: 0.95rem;
+            backdrop-filter: blur(20px); border: 1px solid var(--border);
+            animation: slideIn 0.4s ease-out;
+            box-shadow: var(--shadow-lg);
+            max-width: 400px;
+        }
+        .toast.success { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.3); color: var(--success); }
+        .toast.error { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.3); color: var(--danger); }
+        .toast.info { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.3); color: var(--primary); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Upload zone drag-over state */
+        .upload-zone.drag-over {
+            border-color: var(--success) !important;
+            background: rgba(52,211,153,0.1) !important;
+            transform: scale(1.03);
+            box-shadow: 0 0 40px rgba(52,211,153,0.2);
+        }
+
+        /* Step card icons */
+        .step-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px; font-size: 1.5rem;
+            background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(129,140,248,0.1));
+            border: 1px solid rgba(167,139,250,0.2);
+        }
+
+        /* Animated gradient border for hero buttons */
+        .btn-outline-glow {
+            position: relative; overflow: hidden;
+        }
+        .btn-outline-glow::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent), var(--success));
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .btn-outline-glow:hover::before { opacity: 0.1; }
+
         /* HERO SECTION */
         .hero { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .hero h1 { font-size: 4rem; margin-bottom: 16px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
@@ -153,6 +196,7 @@
             transition: all 0.35s cubic-bezier(.4,0,.2,1);
             margin-bottom: 25px;
             cursor: pointer;
+            position: relative;
         }
         .upload-zone:hover {
             border-color: var(--primary);
@@ -160,7 +204,8 @@
             transform: scale(1.02);
             box-shadow: var(--glow);
         }
-        .upload-zone svg { stroke: var(--primary); margin-bottom: 20px; }
+        .upload-zone svg { stroke: var(--primary); margin-bottom: 20px; transition: transform 0.3s; }
+        .upload-zone:hover svg { transform: translateY(-4px); }
 
         .form-group {
             margin-bottom: 20px;
@@ -273,26 +318,29 @@
                 <h1>AI-Powered <br><span class="text-primary">Career Command Center</span></h1>
                 <p class="text-muted" style="font-size: 1.2rem; margin-bottom: 40px; max-width: 600px;">Elevate your professional trajectory with intelligent resume analysis, automated job matching, and our native resume builder.</p>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-                    <button class="btn" onclick="showPage('upload')" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 30px;">Analyze Resume</button>
-                    <button class="btn" onclick="showPage('builder')" style="padding: 16px 40px; font-size: 1.1rem; background: transparent; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px;">Build New Resume</button>
+                    <button class="btn" onclick="showPage('upload')" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 30px;">🚀 Analyze Resume</button>
+                    <button class="btn btn-outline-glow" onclick="showPage('builder')" style="padding: 16px 40px; font-size: 1.1rem; background: transparent; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px;">✏️ Build New Resume</button>
                 </div>
             </div>
             
             <div class="metrics-grid">
                 <div class="card glass metric-card">
+                    <div class="step-icon">📄</div>
                     <div class="metric-value">1</div>
                     <div class="metric-label">Upload your Resume</div>
-                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Provide your current resume in PDF format.</p>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Provide your current resume in PDF format for AI analysis.</p>
                 </div>
                 <div class="card glass metric-card">
+                    <div class="step-icon">🧠</div>
                     <div class="metric-value">2</div>
                     <div class="metric-label">AI Deep Analysis</div>
-                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Our AI scores your resume and finds keyword gaps.</p>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Our AI scores your resume, detects gaps, and suggests improvements.</p>
                 </div>
                 <div class="card glass metric-card">
+                    <div class="step-icon">🎯</div>
                     <div class="metric-value">3</div>
                     <div class="metric-label">Smart Job Match</div>
-                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Get curated job recommendations based on your profile.</p>
+                    <p class="text-muted" style="margin-top:10px; font-size:0.95rem;">Get curated job recommendations tailored to your profile.</p>
                 </div>
             </div>
         </main>
@@ -304,9 +352,9 @@
                 <div class="typewriter" id="typewriter"></div>
                 
                 <input type="file" id="pdf-upload" accept=".pdf" style="display: none;" onchange="uploadPDF()">
-                <div class="upload-zone" onclick="document.getElementById('pdf-upload').click()">
+                <div class="upload-zone" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">Click to Upload Resume</p>
+                    <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">Drag & Drop or Click to Upload</p>
                     <p class="text-muted" style="font-size: 0.95rem;">PDF file up to 5MB</p>
                     <div id="upload-status" style="margin-top: 15px; color: var(--success); font-weight: 600;"></div>
                 </div>
@@ -378,7 +426,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Accent Color</label>
-                        <input type="color" id="resume-color" value="#2563eb" style="width: 100%; height: 45px; border: none; padding: 0; cursor: pointer;">
+                        <input type="color" id="resume-color" value="#a78bfa" style="width: 100%; height: 45px; border: none; padding: 0; cursor: pointer; border-radius: 8px;">
                     </div>
 
                     <div class="form-group">
@@ -533,6 +581,49 @@
         typingEffect();
 
 
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 4000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                toast.style.transition = 'all 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Drag & Drop Setup
+        const dropZone = document.getElementById('upload-drop-zone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    dropZone.classList.add('drag-over');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    dropZone.classList.remove('drag-over');
+                });
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.pdf')) {
+                        document.getElementById('pdf-upload').files = files;
+                        uploadPDF();
+                    } else {
+                        showToast('Please upload a PDF file only.', 'error');
+                    }
+                }
+            });
+        }
+
         // Application Logic
         async function uploadPDF() {
             const fileInput = document.getElementById("pdf-upload");
@@ -544,7 +635,7 @@
 
             const file = fileInput.files[0];
             statusDiv.style.color = "var(--text-main)";
-            statusDiv.innerText = "Extracting text from PDF...";
+            statusDiv.innerText = "⏳ Extracting text from PDF...";
             
             const formData = new FormData();
             formData.append("file", file);
@@ -559,25 +650,28 @@
                 if (data.error) {
                     statusDiv.style.color = "var(--danger)";
                     statusDiv.innerText = data.error;
+                    showToast(data.error, 'error');
                 } else {
                     currentResumeText = data.text;
                     statusDiv.style.color = "var(--success)";
-                    statusDiv.innerText = `Successfully loaded: ${file.name} \n(${currentResumeText.length} characters)`;
+                    statusDiv.innerText = `✅ Loaded: ${file.name} (${currentResumeText.length} chars)`;
+                    showToast(`Resume "${file.name}" uploaded successfully!`, 'success');
                 }
             } catch (e) {
                 statusDiv.style.color = "var(--danger)";
                 statusDiv.innerText = "Error uploading file. Make sure the server is running.";
+                showToast('Error uploading file. Is the server running?', 'error');
             }
         }
 
         async function analyzeResume() {
             const jobRole = document.getElementById("job-role").value;
             if (!currentResumeText) {
-                alert("Please upload a resume first.");
+                showToast("Please upload a resume first.", "error");
                 return;
             }
             if (!jobRole.trim()) {
-                alert("Please enter a target job role.");
+                showToast("Please enter a target job role.", "error");
                 return;
             }
 
@@ -602,14 +696,15 @@
                 
                 const data = await response.json();
                 if (data.error) {
-                    alert(data.error);
+                    showToast(data.error, 'error');
                     showPage('upload');
                 } else {
                     resultBox.innerHTML = marked.parse(data.result);
                     resultBox.classList.remove("hidden");
+                    showToast('Analysis complete!', 'success');
                 }
             } catch (e) {
-                alert("Error analyzing resume.");
+                showToast('Error analyzing resume. Please try again.', 'error');
                 showPage('upload');
             } finally {
                 loader.classList.add("hidden");
@@ -618,7 +713,7 @@
 
         async function suggestJobs() {
             if (!currentResumeText) {
-                alert("Please upload a resume first in the Upload tab.");
+                showToast("Please upload a resume first.", "error");
                 showPage('upload');
                 return;
             }
@@ -643,13 +738,14 @@
                 
                 const data = await response.json();
                 if (data.error) {
-                    alert(data.error);
+                    showToast(data.error, 'error');
                 } else {
                     resultBox.innerHTML = marked.parse(data.result);
+                    showToast('Job recommendations generated!', 'success');
                     resultBox.classList.remove("hidden");
                 }
             } catch (e) {
-                alert("Error suggesting jobs.");
+                showToast('Error suggesting jobs. Please try again.', 'error');
             } finally {
                 loader.classList.add("hidden");
             }

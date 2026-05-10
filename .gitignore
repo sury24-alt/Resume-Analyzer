@@ -4,3 +4,8 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+.vscode/
+.streamlit/
+*.egg-info/
+dist/
+build/
