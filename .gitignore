@@ -9,3 +9,20 @@ venv/
 *.egg-info/
 dist/
 build/
+.python-version
+node_modules/
+# Development tools
+.python-version
+.env.local
+.env.*.local
+
+# Frontend (if you add Next.js or React later)
+node_modules/
+.next/
+out/
+build/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+.gemini/

@@ -1,4 +1,7 @@
-flask
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
 groq
 PyPDF2
 python-dotenv

@@ -1,13 +1,35 @@
 import os
 import PyPDF2
-from flask import Flask, request, jsonify, render_template
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-app = Flask(__name__)
+app = FastAPI()
+
+# Mount static files and templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+# ── Pydantic Models ──────────────────────────────────────────────────────────
+
+class AnalyzeRequest(BaseModel):
+    resume_text: str = Field(..., min_length=1, description="The full text of the resume")
+    job_role: str = Field(..., min_length=1, description="Target job role to analyze against")
+
+
+class SuggestJobsRequest(BaseModel):
+    resume_text: str = Field(..., min_length=1, description="The full text of the resume")
+
+
+# ── Helper Functions ─────────────────────────────────────────────────────────
 
 def ask_groq(prompt, max_retries=2):
     for attempt in range(max_retries):
@@ -24,6 +46,7 @@ def ask_groq(prompt, max_retries=2):
                 time.sleep(1)
             else:
                 return f"Error: {str(e)}"
+
 
 def analyze_resume(resume_text, job_role):
     prompt = f"""
@@ -45,6 +68,7 @@ def analyze_resume(resume_text, job_role):
     """
     return ask_groq(prompt)
 
+
 def suggest_jobs(resume_text):
     prompt = f"""
     Based on the following resume, suggest 5 suitable job roles.
@@ -60,49 +84,43 @@ def suggest_jobs(resume_text):
     """
     return ask_groq(prompt)
 
-@app.route("/")
-def index():
-    return render_template("index.html")
 
-@app.route("/api/analyze", methods=["POST"])
-def analyze():
-    data = request.json
-    resume_text = data.get("resume_text", "")
-    job_role = data.get("job_role", "")
-    if not resume_text:
-        return jsonify({"error": "No resume text provided"}), 400
-    if not job_role:
-        return jsonify({"error": "No job role provided"}), 400
-    
-    result = analyze_resume(resume_text, job_role)
-    return jsonify({"result": result})
+# ── Routes ───────────────────────────────────────────────────────────────────
 
-@app.route("/api/suggest_jobs", methods=["POST"])
-def suggest_jobs_route():
-    data = request.json
-    resume_text = data.get("resume_text", "")
-    if not resume_text:
-        return jsonify({"error": "No resume text provided"}), 400
-    
-    result = suggest_jobs(resume_text)
-    return jsonify({"result": result})
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
 
-@app.route("/api/extract_pdf", methods=["POST"])
-def extract_pdf():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-    
-    if file and file.filename.endswith(".pdf"):
-        pdf_reader = PyPDF2.PdfReader(file)
+
+@app.post("/api/analyze")
+async def analyze(data: AnalyzeRequest):
+    result = analyze_resume(data.resume_text, data.job_role)
+    return {"result": result}
+
+
+@app.post("/api/suggest_jobs")
+async def suggest_jobs_route(data: SuggestJobsRequest):
+    result = suggest_jobs(data.resume_text)
+    return {"result": result}
+
+
+@app.post("/api/extract_pdf")
+async def extract_pdf(file: UploadFile = File(...)):
+    if not file.filename or not file.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Invalid file format, please upload a PDF")
+
+    try:
+        contents = await file.read()
+        import io
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text()
-        return jsonify({"text": text})
-    
-    return jsonify({"error": "Invalid file format, please upload a PDF"}), 400
+        return {"text": text}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
+
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8506)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8506)
