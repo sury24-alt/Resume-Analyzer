@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0a0a0f;
+  --color-foreground: #e8e8ef;
+  
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-accent: #818cf8;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-muted: #6b6b80;
+
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-solid: #14141f;
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  --font-outfit: 'Outfit', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(167,139,250,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(129,140,248,0.05) 0%, transparent 50%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: var(--font-poppins);
+}
+
+.glass {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.glass:hover {
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 30px rgba(167,139,250,0.15);
+  border-color: rgba(167,139,250,0.2);
+  transform: translateY(-3px);
+}
+
+.markdown-content h1, .markdown-content h2, .markdown-content h3 { 
+  color: var(--color-primary); 
+  margin-top: 25px; 
+  margin-bottom: 15px; 
+  font-family: var(--font-outfit);
+}
+.markdown-content ul, .markdown-content ol { padding-left: 20px; margin-bottom: 15px; }
+.markdown-content li { margin-bottom: 8px; }
+.markdown-content strong { color: var(--color-foreground); }
+.markdown-content p { margin-bottom: 15px; }
+
+@media print {
+  body * { visibility: hidden !important; }
+  #resume-preview-container, #resume-preview-container * { visibility: visible !important; }
+  #resume-preview-container {
+    position: absolute; left: 0; top: 0; width: 100%;
+    box-shadow: none !important; border: none !important;
+    padding: 40px !important; margin: 0 !important;
+    min-height: 0 !important; background: white !important;
+    color: #000 !important;
+  }
+  #resume-preview-container h1, #resume-preview-container h3,
+  #resume-preview-container p, #resume-preview-container li,
+  #resume-preview-container strong, #resume-preview-container span { color: inherit !important; }
+  nav, .container > *:not(#builder) { display: none !important; }
+}
