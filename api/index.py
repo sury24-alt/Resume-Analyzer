@@ -1,9 +1,7 @@
 import os
 import PyPDF2
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from groq import Groq
 from dotenv import load_dotenv
@@ -17,14 +15,7 @@ load_dotenv()
 
 app = FastAPI()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Mount static files and templates
-try:
-    app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-except RuntimeError:
-    pass
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+# Groq Client Setup
 
 def get_groq_client():
     api_key = os.getenv("GROQ_API_KEY", "")
@@ -148,9 +139,7 @@ EVALUATE_ANSWERS_PROMPT = PromptTemplate(
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+# ── API Routes ───────────────────────────────────────────────────────────
 
 
 @app.post("/api/analyze")
