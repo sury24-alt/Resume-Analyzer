@@ -9,13 +9,25 @@ from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = FastAPI()
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Mount static files and templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+try:
+    app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+except RuntimeError:
+    pass
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+def get_groq_client():
+    api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key:
+        return None
+    return Groq(api_key=api_key)
+
+client = get_groq_client()
 
 
 # ── Pydantic Models ──────────────────────────────────────────────────────────
@@ -34,6 +46,8 @@ class SuggestJobsRequest(BaseModel):
 def ask_groq(prompt, max_retries=2):
     for attempt in range(max_retries):
         try:
+            if client is None:
+                return "Error: GROQ_API_KEY environment variable is not set."
             response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
