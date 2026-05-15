@@ -5,3 +5,6 @@ python-multipart
 groq
 PyPDF2
 python-dotenv
+langchain
+langchain-groq
+langchain-core
