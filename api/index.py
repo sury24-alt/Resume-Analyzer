@@ -10,6 +10,7 @@ from typing import List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
+from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel
 
 load_dotenv()
 
@@ -46,6 +47,10 @@ class InterviewEvaluateRequest(BaseModel):
     job_role: str = Field(..., min_length=1)
     questions: List[str]
     answers: List[str]
+
+class ResearchRequest(BaseModel):
+    company_name: str
+    job_role: str
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
 
@@ -187,6 +192,43 @@ async def evaluate_answers(data: InterviewEvaluateRequest):
         })
         return {"feedback": feedback}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/research")
+async def research_company(data: ResearchRequest):
+    api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not configured")
+    
+    try:
+        # Use LiteLLMModel to connect smolagents to Groq
+        # Note: LiteLLM uses 'groq/' prefix for groq models
+        model = LiteLLMModel(
+            model_id="groq/llama-3.3-70b-versatile",
+            api_key=api_key
+        )
+        
+        search_tool = DuckDuckGoSearchTool()
+        # CodeAgent is the autonomous agent that can write code to solve tasks
+        agent = CodeAgent(tools=[search_tool], model=model, add_base_tools=True)
+        
+        prompt = f"""
+        Research the company '{data.company_name}' for a candidate applying for the '{data.job_role}' position.
+        
+        Your goal is to provide 'Strategic Intelligence' that helps the candidate stand out in interviews.
+        1. Find 2-3 recent news items or major achievements of the company from the last year.
+        2. Identify their core values, mission, or corporate culture based on their official statements.
+        3. Search for common interview themes or the technical stack used at {data.company_name} for {data.job_role} roles.
+        4. Provide 3 specific, insightful 'Power Questions' the candidate should ask the interviewer to show they've done their homework.
+        
+        Format your final answer in clean, professional Markdown.
+        """
+        
+        result = agent.run(prompt)
+        return {"result": str(result)}
+    except Exception as e:
+        print(f"Agent Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

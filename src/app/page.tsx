@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
-type Tab = "dashboard" | "upload" | "results" | "jobs" | "builder" | "interview";
+type Tab = "dashboard" | "upload" | "results" | "jobs" | "builder" | "interview" | "intel";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -23,6 +23,11 @@ export default function Home() {
   const [interviewFeedback, setInterviewFeedback] = useState("");
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [isEvaluatingAnswers, setIsEvaluatingAnswers] = useState(false);
+  
+  // Agent State
+  const [companyName, setCompanyName] = useState("");
+  const [intelResult, setIntelResult] = useState("");
+  const [isResearching, setIsResearching] = useState(false);
 
   // Builder State
   const [builderColor, setBuilderColor] = useState("#a78bfa");
@@ -210,6 +215,40 @@ export default function Home() {
     }
   };
 
+  const handleResearchCompany = async () => {
+    if (!companyName.trim()) {
+      showToast("Please enter a company name.", "error");
+      return;
+    }
+    if (!jobRole.trim()) {
+      showToast("Please specify a job role in the Upload tab first.", "error");
+      setActiveTab("upload");
+      return;
+    }
+
+    setIsResearching(true);
+    setIntelResult("");
+
+    try {
+      const response = await fetch("/api/research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company_name: companyName, job_role: jobRole }),
+      });
+      const data = await response.json();
+      if (data.error || !response.ok) {
+        showToast(data.error || "Research failed", "error");
+      } else {
+        setIntelResult(data.result);
+        showToast("Deep Intel report ready!", "success");
+      }
+    } catch {
+      showToast("Error performing research.", "error");
+    } finally {
+      setIsResearching(false);
+    }
+  };
+
   return (
     <>
       {/* Toast Notification */}
@@ -240,6 +279,7 @@ export default function Home() {
           { id: "results", label: "Analysis Results" },
           { id: "jobs", label: "Job Matches" },
           { id: "interview", label: "Interview Whisperer" },
+          { id: "intel", label: "Deep Intel" },
           { id: "builder", label: "Resume Builder" },
         ].map((tab) => (
           <button
@@ -708,6 +748,77 @@ export default function Home() {
                       Try Another Session
                     </button>
                   </div>
+                </div>
+              )}
+            </motion.main>
+          )}
+
+          {/* Deep Intel Agent */}
+          {activeTab === "intel" && (
+            <motion.main
+              key="intel"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="min-h-[60vh]"
+            >
+              <div className="text-center mb-12">
+                <h2 className="text-5xl font-extrabold font-outfit mb-3">
+                  Deep <span className="text-[var(--color-primary)]">Intel</span> Agent
+                </h2>
+                <p className="text-xl text-[var(--color-muted)]">Autonomous web research to help you dominate your interview.</p>
+              </div>
+
+              <div className="max-w-2xl mx-auto mb-12">
+                <div className="glass p-8 rounded-2xl">
+                  <div className="mb-6">
+                    <label className="block font-semibold mb-2 text-[var(--color-foreground)]">Which company are you interviewing with?</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. Google, NVIDIA, Stripe"
+                      className="w-full p-4 border border-[var(--color-border)] rounded-xl bg-white/5 text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block font-semibold mb-2 text-[var(--color-muted)] text-sm">Target Role (Set in Upload tab)</label>
+                    <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-[var(--color-foreground)]">
+                      {jobRole || "No role specified yet"}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleResearchCompany}
+                    disabled={isResearching}
+                    className="w-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-[#0a0a0f] py-4 rounded-xl font-bold text-lg hover:shadow-[0_6px_20px_rgba(167,139,250,0.35)] transition-all hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0"
+                  >
+                    {isResearching ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" /> Agent is researching...
+                      </>
+                    ) : (
+                      <>
+                        Start Autonomous Research <Target className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {intelResult && (
+                <div className="max-w-4xl mx-auto">
+                  <div className="glass p-10 min-h-[400px] markdown-content border-[var(--color-primary)]/30">
+                    <h3 className="text-3xl font-extrabold font-outfit text-[var(--color-primary)] mb-6 text-center border-b border-white/10 pb-4">
+                      Strategic Intelligence Report
+                    </h3>
+                    <ReactMarkdown>{intelResult}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {!intelResult && !isResearching && (
+                <div className="text-center text-[var(--color-muted)] max-w-lg mx-auto">
+                  <p>Our autonomous agent will browse the web to find recent news, culture insights, and technical expectations specific to this company.</p>
                 </div>
               )}
             </motion.main>
