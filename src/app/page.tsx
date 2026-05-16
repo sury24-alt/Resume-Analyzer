@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadCloud, FileText, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
+import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Tab = "dashboard" | "upload" | "results" | "jobs" | "builder" | "interview";
@@ -66,7 +66,7 @@ export default function Home() {
         setUploadStatus(`✅ Loaded: ${file.name}`);
         showToast(`Resume "${file.name}" uploaded successfully!`, "success");
       }
-    } catch (e) {
+    } catch {
       setUploadStatus("Error uploading file. Make sure the server is running.");
       showToast("Error uploading file. Is the server running?", "error");
     }
@@ -100,7 +100,7 @@ export default function Home() {
         setAnalysisResult(data.result);
         showToast("Analysis complete!", "success");
       }
-    } catch (e) {
+    } catch {
       showToast("Error analyzing resume. Please try again.", "error");
       setActiveTab("upload");
     } finally {
@@ -132,7 +132,7 @@ export default function Home() {
         setJobsResult(data.result);
         showToast("Job recommendations generated!", "success");
       }
-    } catch (e) {
+    } catch {
       showToast("Error suggesting jobs. Please try again.", "error");
     } finally {
       setIsGeneratingJobs(false);
@@ -169,7 +169,7 @@ export default function Home() {
         setInterviewQuestions(data.questions);
         showToast("Technical questions generated!", "success");
       }
-    } catch (e) {
+    } catch {
       showToast("Error generating questions.", "error");
     } finally {
       setIsGeneratingQuestions(false);
@@ -203,7 +203,7 @@ export default function Home() {
         setInterviewFeedback(data.feedback);
         showToast("Feedback generated!", "success");
       }
-    } catch (e) {
+    } catch {
       showToast("Error evaluating answers.", "error");
     } finally {
       setIsEvaluatingAnswers(false);
@@ -531,7 +531,7 @@ export default function Home() {
                     <Download className="w-5 h-5" /> Download as PDF
                   </button>
                   <p className="text-center text-[var(--color-muted)] text-sm mt-3">
-                    (Opens print dialog — select "Save as PDF")
+                    (Opens print dialog — select &quot;Save as PDF&quot;)
                   </p>
                 </div>
 

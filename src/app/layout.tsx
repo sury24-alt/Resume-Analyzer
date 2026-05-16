@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Poppins, Merriweather, Roboto, Syne } from "next/font/google";
+import { Outfit, Poppins } from "next/font/google";
 import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
