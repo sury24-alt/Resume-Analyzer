@@ -424,17 +424,18 @@ export default function Home() {
                   <p className="text-lg font-semibold">AI is analyzing your resume...</p>
                 </div>
               ) : analysisResult ? (
-                <>
-                  <div className="glass p-10 min-h-[400px] markdown-content">
-                    <ReactMarkdown>{analysisResult}</ReactMarkdown>
-                  </div>
+                <div className="glass p-10 min-h-[400px] markdown-content">
+                  <ReactMarkdown>{analysisResult}</ReactMarkdown>
+                </div>
+              ) : (
+                <div className="glass p-10 min-h-[400px] flex items-center justify-center">
+                  <p className="text-xl text-[var(--color-muted)]">Upload a resume and start analysis to see results here.</p>
+                </div>
+              )}
             </motion.main>
           )}
 
           {/* Interview Whisperer */}
-
-            </motion.main>
-          )}
 
           {/* Interview Whisperer */}
           {activeTab === "interview" && (
