@@ -6,8 +6,8 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 const poppins = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], variable: "--font-poppins" });
 
 export const metadata: Metadata = {
-  title: "AI Resume Analyzer & Builder",
-  description: "Elevate your professional trajectory with intelligent resume analysis, automated job matching, and our native resume builder.",
+  title: "AI Resume Analyzer",
+  description: "Elevate your professional trajectory with intelligent resume analysis, automated job matching, and technical interview preparation.",
 };
 
 export default function RootLayout({

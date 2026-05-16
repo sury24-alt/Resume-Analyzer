@@ -12,9 +12,7 @@ export default function Home() {
   const [resumeText, setResumeText] = useState("");
   const [jobRole, setJobRole] = useState("");
   const [analysisResult, setAnalysisResult] = useState("");
-  const [jobsResult, setJobsResult] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isGeneratingJobs, setIsGeneratingJobs] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
 
   // Interview Whisperer State
@@ -28,8 +26,6 @@ export default function Home() {
   const [companyName, setCompanyName] = useState("");
   const [intelResult, setIntelResult] = useState("");
   const [isResearching, setIsResearching] = useState(false);
-
-  );
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 

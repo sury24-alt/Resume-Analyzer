@@ -59,18 +59,4 @@ body {
 .markdown-content strong { color: var(--color-foreground); }
 .markdown-content p { margin-bottom: 15px; }
 
-@media print {
-  body * { visibility: hidden !important; }
-  #resume-preview-container, #resume-preview-container * { visibility: visible !important; }
-  #resume-preview-container {
-    position: absolute; left: 0; top: 0; width: 100%;
-    box-shadow: none !important; border: none !important;
-    padding: 40px !important; margin: 0 !important;
-    min-height: 0 !important; background: white !important;
-    color: #000 !important;
-  }
-  #resume-preview-container h1, #resume-preview-container h3,
-  #resume-preview-container p, #resume-preview-container li,
-  #resume-preview-container strong, #resume-preview-container span { color: inherit !important; }
-  nav, .container > *:not(#builder) { display: none !important; }
-}
+
