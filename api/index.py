@@ -142,21 +142,93 @@ EVALUATE_ANSWERS_PROMPT = PromptTemplate(
     input_variables=["resume_text", "job_role", "q_and_a"]
 )
 
+# --- Orchestration Steps ---
+RESUME_GRADER_PROMPT = PromptTemplate(
+    template="""You are an expert ATS Grader. Grade this resume for a {job_role} position.
+    
+    Resume: {resume_text}
+    
+    Return:
+    1. Overall ATS Score (0-100)
+    2. Detailed breakdown (Formatting, Quantifiable Impact, Skill Match)
+    3. Top 3 immediate improvements needed.
+    
+    Format in Markdown.""",
+    input_variables=["resume_text", "job_role"]
+)
+
+KEYWORD_OPTIMIZER_PROMPT = PromptTemplate(
+    template="""You are a Keyword Optimization Expert. Analyze this resume for a {job_role} role and identify keyword gaps.
+    
+    Resume: {resume_text}
+    
+    Return:
+    1. Critical missing keywords vs {job_role} expectations.
+    2. Skills you have but aren't highlighted enough.
+    3. Actionable advice on where to insert these keywords.
+    
+    Format in Markdown.""",
+    input_variables=["resume_text", "job_role"]
+)
+
+ORCHESTRATED_JOB_MATCHER_PROMPT = PromptTemplate(
+    template="""Based on this resume analysis, suggest 3 highly specific job roles that the candidate is already 80% qualified for.
+    
+    Resume: {resume_text}
+    
+    For each role, provide:
+    1. Role Title
+    2. Match Strength (%)
+    3. One 'Killer Bullet' to add to the resume for this specific role.
+    
+    Format in Markdown.""",
+    input_variables=["resume_text"]
+)
+
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 # ── API Routes ───────────────────────────────────────────────────────────
 
 
 @app.post("/api/analyze")
-async def analyze(data: AnalyzeRequest):
-    result = analyze_resume(data.resume_text, data.job_role)
-    return {"result": result}
+async def analyze_route(data: AnalyzeRequest):
+    chat = get_chat_model()
+    if chat is None:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not configured")
+    
+    try:
+        # Orchestration Step 1: Grade the Resume
+        grading_chain = RESUME_GRADER_PROMPT | chat | StrOutputParser()
+        grade = grading_chain.invoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        
+        # Orchestration Step 2: Optimize Keywords
+        keyword_chain = KEYWORD_OPTIMIZER_PROMPT | chat | StrOutputParser()
+        keywords = keyword_chain.invoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        
+        # Orchestration Step 3: Match Jobs
+        job_chain = ORCHESTRATED_JOB_MATCHER_PROMPT | chat | StrOutputParser()
+        jobs = job_chain.invoke({"resume_text": data.resume_text})
+        
+        # Combine results
+        final_report = f"""
+# 🚀 Orchestrated Resume Intelligence
 
+## 📊 Step 1: Strategic Grading
+{grade}
 
-@app.post("/api/suggest_jobs")
-async def suggest_jobs_route(data: SuggestJobsRequest):
-    result = suggest_jobs(data.resume_text)
-    return {"result": result}
+---
+
+## 🔑 Step 2: Keyword Optimization
+{keywords}
+
+---
+
+## 🎯 Step 3: Ideal Job Matches
+{jobs}
+        """
+        return {"result": final_report}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/interview/generate")

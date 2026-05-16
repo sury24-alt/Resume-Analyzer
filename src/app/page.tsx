@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
-type Tab = "dashboard" | "upload" | "results" | "jobs" | "builder" | "interview" | "intel";
+type Tab = "dashboard" | "upload" | "results" | "interview" | "intel";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -29,14 +29,6 @@ export default function Home() {
   const [intelResult, setIntelResult] = useState("");
   const [isResearching, setIsResearching] = useState(false);
 
-  // Builder State
-  const [builderColor, setBuilderColor] = useState("#a78bfa");
-  const [builderFont, setBuilderFont] = useState("'Inter', sans-serif");
-  const [builderName, setBuilderName] = useState("Jane Doe");
-  const [builderTitle, setBuilderTitle] = useState("Senior Product Designer");
-  const [builderEmail, setBuilderEmail] = useState("jane.doe@example.com");
-  const [builderSummary, setBuilderSummary] = useState(
-    "Creative and detail-oriented product designer with 6+ years of experience in crafting user-centric digital experiences. Proven track record of improving user engagement and translating complex requirements into beautiful interfaces."
   );
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -110,37 +102,6 @@ export default function Home() {
       setActiveTab("upload");
     } finally {
       setIsAnalyzing(false);
-    }
-  };
-
-  const handleSuggestJobs = async () => {
-    if (!resumeText) {
-      showToast("Please upload a resume first.", "error");
-      setActiveTab("upload");
-      return;
-    }
-
-    setActiveTab("jobs");
-    setIsGeneratingJobs(true);
-    setJobsResult("");
-
-    try {
-      const response = await fetch("/api/suggest_jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resume_text: resumeText }),
-      });
-      const data = await response.json();
-      if (data.error || !response.ok) {
-        showToast(data.error || "Job suggestion failed", "error");
-      } else {
-        setJobsResult(data.result);
-        showToast("Job recommendations generated!", "success");
-      }
-    } catch {
-      showToast("Error suggesting jobs. Please try again.", "error");
-    } finally {
-      setIsGeneratingJobs(false);
     }
   };
 
@@ -277,10 +238,7 @@ export default function Home() {
           { id: "dashboard", label: "Dashboard" },
           { id: "upload", label: "Upload Resume" },
           { id: "results", label: "Analysis Results" },
-          { id: "jobs", label: "Job Matches" },
-          { id: "interview", label: "Interview Whisperer" },
           { id: "intel", label: "Deep Intel" },
-          { id: "builder", label: "Resume Builder" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -312,7 +270,7 @@ export default function Home() {
                 <span className="text-[var(--color-primary)]">Career Command Center</span>
               </h1>
               <p className="text-xl text-[var(--color-muted)] mb-10 max-w-2xl">
-                Elevate your professional trajectory with intelligent resume analysis, automated job matching, and our native resume builder.
+                Elevate your professional trajectory with intelligent resume analysis, automated job matching, and technical interview prep.
               </p>
               <div className="flex flex-wrap justify-center gap-5">
                 <button
@@ -322,10 +280,10 @@ export default function Home() {
                   🚀 Analyze Resume
                 </button>
                 <button
-                  onClick={() => setActiveTab("builder")}
+                  onClick={() => setActiveTab("intel")}
                   className="border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-10 py-4 rounded-full font-semibold text-lg hover:bg-[var(--color-primary)]/10 transition-all hover:-translate-y-1"
                 >
-                  ✏️ Build New Resume
+                  🔍 Deep Research
                 </button>
               </div>
 
@@ -431,231 +389,11 @@ export default function Home() {
                   <div className="glass p-10 min-h-[400px] markdown-content">
                     <ReactMarkdown>{analysisResult}</ReactMarkdown>
                   </div>
-                  <div className="mt-12 text-center">
-                    <button
-                      onClick={handleSuggestJobs}
-                      className="bg-[var(--color-success)] text-[#0a0a0f] px-10 py-4 rounded-xl font-semibold text-lg hover:shadow-[0_6px_20px_rgba(52,211,153,0.35)] transition-all hover:-translate-y-1 inline-flex items-center gap-2"
-                    >
-                      Generate Job Recommendations <Briefcase className="w-5 h-5" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="glass p-10 min-h-[400px] flex items-center justify-center">
-                  <p className="text-xl text-[var(--color-muted)]">Upload a resume and start analysis to see results here.</p>
-                </div>
-              )}
             </motion.main>
           )}
 
-          {/* Jobs */}
-          {activeTab === "jobs" && (
-            <motion.main
-              key="jobs"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="text-center mb-12">
-                <h2 className="text-5xl font-extrabold font-outfit mb-3">
-                  Recommended <span className="text-[var(--color-success)]">Roles</span>
-                </h2>
-                <p className="text-xl text-[var(--color-muted)]">AI-Matched opportunities for your profile</p>
-              </div>
+          {/* Interview Whisperer */}
 
-              {isGeneratingJobs ? (
-                <div className="flex flex-col items-center py-20">
-                  <Loader2 className="w-12 h-12 text-[var(--color-success)] animate-spin mb-4" />
-                  <p className="text-lg font-semibold">Finding the best roles for you...</p>
-                </div>
-              ) : jobsResult ? (
-                <div className="glass p-10 min-h-[400px] markdown-content">
-                  <ReactMarkdown>{jobsResult}</ReactMarkdown>
-                </div>
-              ) : (
-                <div className="glass p-10 min-h-[400px] flex items-center justify-center">
-                  <p className="text-xl text-[var(--color-muted)]">Generate job recommendations from the Results tab to see them here.</p>
-                </div>
-              )}
-            </motion.main>
-          )}
-
-          {/* Builder */}
-          {activeTab === "builder" && (
-            <motion.main
-              key="builder"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="mb-10 text-center md:text-left print:hidden">
-                <h2 className="text-5xl font-extrabold font-outfit mb-3">
-                  Resume <span className="text-[var(--color-primary)]">Builder</span>
-                </h2>
-                <p className="text-xl text-[var(--color-muted)]">Customize your professional identity directly in the browser.</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-10">
-                {/* Editor Panel */}
-                <div className="glass p-8 self-start print:hidden">
-                  <h3 className="text-2xl font-bold mb-6 font-outfit">Theme Settings</h3>
-                  
-                  <div className="mb-5">
-                    <label className="block font-semibold mb-2">Accent Color</label>
-                    <input
-                      type="color"
-                      value={builderColor}
-                      onChange={(e) => setBuilderColor(e.target.value)}
-                      className="w-full h-12 rounded-lg cursor-pointer border-none p-0"
-                    />
-                  </div>
-
-                  <div className="mb-8">
-                    <label className="block font-semibold mb-2">Typography Style</label>
-                    <select
-                      value={builderFont}
-                      onChange={(e) => setBuilderFont(e.target.value)}
-                      className="w-full p-3 border border-[var(--color-border)] rounded-lg bg-white/5 focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                    >
-                      <option value="var(--font-poppins)">Modern Sans (Poppins)</option>
-                      <option value="Arial, sans-serif">Clean Sans (Arial)</option>
-                      <option value="Georgia, serif">Classic Serif (Georgia)</option>
-                    </select>
-                  </div>
-
-                  <h3 className="text-2xl font-bold mb-6 font-outfit">Personal Details</h3>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block font-semibold mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={builderName}
-                        onChange={(e) => setBuilderName(e.target.value)}
-                        className="w-full p-3 border border-[var(--color-border)] rounded-lg bg-white/5 focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-2">Professional Title</label>
-                      <input
-                        type="text"
-                        value={builderTitle}
-                        onChange={(e) => setBuilderTitle(e.target.value)}
-                        className="w-full p-3 border border-[var(--color-border)] rounded-lg bg-white/5 focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-2">Email Address</label>
-                      <input
-                        type="text"
-                        value={builderEmail}
-                        onChange={(e) => setBuilderEmail(e.target.value)}
-                        className="w-full p-3 border border-[var(--color-border)] rounded-lg bg-white/5 focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-2">Professional Summary</label>
-                      <textarea
-                        rows={5}
-                        value={builderSummary}
-                        onChange={(e) => setBuilderSummary(e.target.value)}
-                        className="w-full p-3 border border-[var(--color-border)] rounded-lg bg-white/5 focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => window.print()}
-                    className="w-full mt-8 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-[#0a0a0f] py-4 rounded-xl font-bold text-lg hover:shadow-[0_4px_15px_rgba(167,139,250,0.4)] transition-all flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-5 h-5" /> Download as PDF
-                  </button>
-                  <p className="text-center text-[var(--color-muted)] text-sm mt-3">
-                    (Opens print dialog — select &quot;Save as PDF&quot;)
-                  </p>
-                </div>
-
-                {/* Live Preview */}
-                <div
-                  id="resume-preview-container"
-                  className="bg-white p-12 rounded-2xl shadow-2xl min-h-[900px] border border-[var(--color-border)] text-slate-900"
-                  style={{ fontFamily: builderFont }}
-                >
-                  <div
-                    className="flex gap-8 items-center pb-8 mb-8 border-b-4"
-                    style={{ borderColor: builderColor }}
-                  >
-                    <div>
-                      <h1
-                        className="text-5xl font-bold mb-2 font-outfit"
-                        style={{ color: builderColor }}
-                      >
-                        {builderName || "Your Name"}
-                      </h1>
-                      <h3 className="text-2xl text-slate-600 font-medium mb-2">
-                        {builderTitle || "Professional Title"}
-                      </h3>
-                      <p className="text-slate-500">{builderEmail || "Email Address"}</p>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <h3
-                      className="text-xl font-bold uppercase tracking-widest mb-4"
-                      style={{ color: builderColor }}
-                    >
-                      Professional Profile
-                    </h3>
-                    <p className="text-slate-700 leading-relaxed text-lg">
-                      {builderSummary || "Your professional summary will appear here."}
-                    </p>
-                  </div>
-
-                  <div className="mb-8">
-                    <h3
-                      className="text-xl font-bold uppercase tracking-widest mb-4"
-                      style={{ color: builderColor }}
-                    >
-                      Experience
-                    </h3>
-                    <div className="mb-5">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <strong className="text-xl text-slate-900">Lead UI/UX Designer</strong>
-                        <span className="text-slate-500 font-medium">2021 - Present</span>
-                      </div>
-                      <p className="text-slate-600 font-medium mb-3">TechCorp Inc. • San Francisco, CA</p>
-                      <ul className="list-disc ml-5 text-slate-700 leading-relaxed space-y-1">
-                        <li>Spearheaded the redesign of the core SaaS platform, increasing user retention by 35%.</li>
-                        <li>Collaborated with a cross-functional team of 12 engineers and product managers.</li>
-                        <li>Developed and maintained a comprehensive design system utilized across 4 flagship products.</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3
-                      className="text-xl font-bold uppercase tracking-widest mb-4"
-                      style={{ color: builderColor }}
-                    >
-                      Education & Skills
-                    </h3>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <strong className="text-lg text-slate-900 block mb-1">B.S. Interaction Design</strong>
-                        <span className="text-slate-500 block">University of Technology, 2018</span>
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="bg-slate-100 px-3 py-1 rounded text-sm text-slate-700">Figma</span>
-                          <span className="bg-slate-100 px-3 py-1 rounded text-sm text-slate-700">Prototyping</span>
-                          <span className="bg-slate-100 px-3 py-1 rounded text-sm text-slate-700">HTML/CSS</span>
-                          <span className="bg-slate-100 px-3 py-1 rounded text-sm text-slate-700">User Research</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </motion.main>
           )}
 
