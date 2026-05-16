@@ -239,26 +239,26 @@ async def analyze_route(data: AnalyzeRequest):
         grade, keywords, jobs = await asyncio.gather(grading_task, keyword_task, job_task)
         
         # --- NEW: Store in Pinecone for "Antigravity" Vibes ---
-        if pinecone_index:
-            try:
-                embeddings = HuggingFaceInferenceAPIEmbeddings(
-                    api_key=os.getenv("HUGGINGFACE_API_KEY", ""),
-                    model_name="sentence-transformers/all-MiniLM-L6-v2"
-                )
-                vector = embeddings.embed_query(data.resume_text)
-                pinecone_index.upsert(
-                    vectors=[{
-                        "id": str(uuid.uuid4()),
-                        "values": vector,
-                        "metadata": {
-                            "text": data.resume_text[:1000], # Store preview
-                            "job_role": data.job_role,
-                            "score": 85 # Dummy score for now
-                        }
-                    }]
-                )
-            except Exception as e:
-                print(f"⚠️ Pinecone Vault Error (skipping): {e}")
+        # if pinecone_index:
+        #     try:
+        #         embeddings = HuggingFaceInferenceAPIEmbeddings(
+        #             api_key=os.getenv("HUGGINGFACE_API_KEY", ""),
+        #             model_name="sentence-transformers/all-MiniLM-L6-v2"
+        #         )
+        #         vector = embeddings.embed_query(data.resume_text)
+        #         pinecone_index.upsert(
+        #             vectors=[{
+        #                 "id": str(uuid.uuid4()),
+        #                 "values": vector,
+        #                 "metadata": {
+        #                     "text": data.resume_text[:1000], # Store preview
+        #                     "job_role": data.job_role,
+        #                     "score": 85 # Dummy score for now
+        #                 }
+        #             }]
+        #         )
+        #     except Exception as e:
+        #         print(f"⚠️ Pinecone Vault Error (skipping): {e}")
 
         # Combine results
         final_report = f"""
