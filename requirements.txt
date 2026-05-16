@@ -10,4 +10,4 @@ langchain-core
 smolagents
 duckduckgo-search
 pinecone-client
-langchain-openai
+langchain-huggingface

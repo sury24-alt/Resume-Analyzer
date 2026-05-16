@@ -12,7 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel
 from pinecone import Pinecone, ServerlessSpec
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 import uuid
 
 load_dotenv()
@@ -46,7 +46,7 @@ def init_pinecone():
             if index_name not in [idx.name for idx in pc.list_indexes()]:
                 pc.create_index(
                     name=index_name,
-                    dimension=1536, # OpenAI embedding dimension
+                    dimension=384, # HuggingFace all-MiniLM-L6-v2 dimension
                     metric="cosine",
                     spec=ServerlessSpec(cloud="aws", region="us-east-1")
                 )
@@ -242,9 +242,9 @@ async def analyze_route(data: AnalyzeRequest):
         jobs = job_chain.invoke({"resume_text": data.resume_text})
         
         # --- NEW: Store in Pinecone for "Antigravity" Vibes ---
-        if pinecone_index and os.getenv("OPENAI_API_KEY"):
+        if pinecone_index:
             try:
-                embeddings = OpenAIEmbeddings()
+                embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
                 vector = embeddings.embed_query(data.resume_text)
                 pinecone_index.upsert(
                     vectors=[{
@@ -362,11 +362,11 @@ async def research_company(data: ResearchRequest):
 
 @app.post("/api/vault/search")
 async def search_vault(data: VaultSearchRequest):
-    if not pinecone_index or not os.getenv("OPENAI_API_KEY"):
-        raise HTTPException(status_code=500, detail="Pinecone or OpenAI not configured")
+    if not pinecone_index:
+        raise HTTPException(status_code=500, detail="Pinecone not configured")
     
     try:
-        embeddings = OpenAIEmbeddings()
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         query_vector = embeddings.embed_query(data.query)
         
         results = pinecone_index.query(
