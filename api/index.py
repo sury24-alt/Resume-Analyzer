@@ -11,6 +11,9 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel
+from pinecone import Pinecone, ServerlessSpec
+from langchain_openai import OpenAIEmbeddings
+import uuid
 
 load_dotenv()
 
@@ -26,6 +29,32 @@ def get_groq_client():
 
 client = get_groq_client()
 
+
+# Pinecone Setup
+pc = None
+pinecone_index = None
+
+def init_pinecone():
+    global pc, pinecone_index
+    api_key = os.getenv("PINECONE_API_KEY")
+    index_name = os.getenv("PINECONE_INDEX", "resumes")
+    
+    if api_key:
+        try:
+            pc = Pinecone(api_key=api_key)
+            # Create index if it doesn't exist
+            if index_name not in [idx.name for idx in pc.list_indexes()]:
+                pc.create_index(
+                    name=index_name,
+                    dimension=1536, # OpenAI embedding dimension
+                    metric="cosine",
+                    spec=ServerlessSpec(cloud="aws", region="us-east-1")
+                )
+            pinecone_index = pc.Index(index_name)
+        except Exception as e:
+            print(f"Pinecone Init Error: {e}")
+
+init_pinecone()
 
 # ── Pydantic Models ──────────────────────────────────────────────────────────
 
@@ -51,6 +80,9 @@ class InterviewEvaluateRequest(BaseModel):
 class ResearchRequest(BaseModel):
     company_name: str
     job_role: str
+
+class VaultSearchRequest(BaseModel):
+    query: str
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
 
@@ -209,6 +241,25 @@ async def analyze_route(data: AnalyzeRequest):
         job_chain = ORCHESTRATED_JOB_MATCHER_PROMPT | chat | StrOutputParser()
         jobs = job_chain.invoke({"resume_text": data.resume_text})
         
+        # --- NEW: Store in Pinecone for "Antigravity" Vibes ---
+        if pinecone_index and os.getenv("OPENAI_API_KEY"):
+            try:
+                embeddings = OpenAIEmbeddings()
+                vector = embeddings.embed_query(data.resume_text)
+                pinecone_index.upsert(
+                    vectors=[{
+                        "id": str(uuid.uuid4()),
+                        "values": vector,
+                        "metadata": {
+                            "text": data.resume_text[:1000], # Store preview
+                            "job_role": data.job_role,
+                            "score": 85 # Dummy score for now
+                        }
+                    }]
+                )
+            except Exception as e:
+                print(f"Pinecone Upsert Error: {e}")
+
         # Combine results
         final_report = f"""
 # 🚀 Orchestrated Resume Intelligence
@@ -307,6 +358,34 @@ async def research_company(data: ResearchRequest):
         prompt = f"Provide strategic interview intelligence for {data.company_name} and the role {data.job_role} based on your general knowledge. Include news, culture, and 3 power questions."
         result = ask_groq(prompt)
         return {"result": result}
+
+
+@app.post("/api/vault/search")
+async def search_vault(data: VaultSearchRequest):
+    if not pinecone_index or not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="Pinecone or OpenAI not configured")
+    
+    try:
+        embeddings = OpenAIEmbeddings()
+        query_vector = embeddings.embed_query(data.query)
+        
+        results = pinecone_index.query(
+            vector=query_vector,
+            top_k=5,
+            include_metadata=True
+        )
+        
+        formatted_results = []
+        for res in results["matches"]:
+            formatted_results.append({
+                "id": res["id"],
+                "score": res["score"],
+                "metadata": res["metadata"]
+            })
+            
+        return {"results": formatted_results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/extract_pdf")

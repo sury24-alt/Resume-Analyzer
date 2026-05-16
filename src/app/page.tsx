@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
-type Tab = "dashboard" | "upload" | "results" | "interview" | "intel";
+type Tab = "dashboard" | "upload" | "results" | "interview" | "intel" | "vault";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -26,6 +26,11 @@ export default function Home() {
   const [companyName, setCompanyName] = useState("");
   const [intelResult, setIntelResult] = useState("");
   const [isResearching, setIsResearching] = useState(false);
+
+  // Vault State
+  const [vaultQuery, setVaultQuery] = useState("");
+  const [vaultResults, setVaultResults] = useState<any[]>([]);
+  const [isSearchingVault, setIsSearchingVault] = useState(false);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
@@ -206,6 +211,39 @@ export default function Home() {
     }
   };
 
+  const handleVaultSearch = async () => {
+    if (!vaultQuery.trim()) {
+      showToast("Please enter a search query.", "error");
+      return;
+    }
+
+    setIsSearchingVault(true);
+    setVaultResults([]);
+
+    try {
+      const response = await fetch("/api/vault/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: vaultQuery }),
+      });
+      const data = await response.json();
+      if (data.error || !response.ok) {
+        showToast(data.error || "Vault search failed. Check your API keys.", "error");
+      } else {
+        setVaultResults(data.results);
+        if (data.results.length === 0) {
+          showToast("No matching resumes found.", "info");
+        } else {
+          showToast(`Found ${data.results.length} matching resumes!`, "success");
+        }
+      }
+    } catch {
+      showToast("Error searching vault.", "error");
+    } finally {
+      setIsSearchingVault(false);
+    }
+  };
+
   return (
     <>
       {/* Toast Notification */}
@@ -235,6 +273,7 @@ export default function Home() {
           { id: "upload", label: "Upload Resume" },
           { id: "results", label: "Analysis Results" },
           { id: "intel", label: "Deep Intel" },
+          { id: "vault", label: "Resume Vault" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -553,6 +592,84 @@ export default function Home() {
               {!intelResult && !isResearching && (
                 <div className="text-center text-[var(--color-muted)] max-w-lg mx-auto">
                   <p>Our autonomous agent will browse the web to find recent news, culture insights, and technical expectations specific to this company.</p>
+                </div>
+              )}
+            </motion.main>
+          )}
+
+          {/* Resume Vault */}
+          {activeTab === "vault" && (
+            <motion.main
+              key="vault"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="min-h-[60vh]"
+            >
+              <div className="text-center mb-12">
+                <h2 className="text-5xl font-extrabold font-outfit mb-3">
+                  Resume <span className="text-[var(--color-primary)]">Vault</span>
+                </h2>
+                <p className="text-xl text-[var(--color-muted)]">Semantic search powered by Pinecone Serverless.</p>
+              </div>
+
+              <div className="max-w-3xl mx-auto mb-12">
+                <div className="glass p-8 rounded-2xl flex gap-4">
+                  <input
+                    type="text"
+                    value={vaultQuery}
+                    onChange={(e) => setVaultQuery(e.target.value)}
+                    placeholder="Search by skill, experience, or role (e.g. 'React developers with AWS')"
+                    className="flex-1 p-4 border border-[var(--color-border)] rounded-xl bg-white/5 text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-primary)] transition-all"
+                    onKeyDown={(e) => e.key === "Enter" && handleVaultSearch()}
+                  />
+                  <button
+                    onClick={handleVaultSearch}
+                    disabled={isSearchingVault}
+                    className="bg-[var(--color-primary)] text-[#0a0a0f] px-8 py-4 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {isSearchingVault ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                {vaultResults.map((res) => (
+                  <motion.div
+                    key={res.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="glass p-6 rounded-2xl border-white/5 hover:border-[var(--color-primary)]/30"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        {res.metadata.job_role}
+                      </span>
+                      <span className="text-[var(--color-muted)] text-xs font-mono">
+                        Match: {(res.score * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <p className="text-[var(--color-foreground)] line-clamp-4 text-sm mb-4 italic">
+                      &quot;{res.metadata.text}...&quot;
+                    </p>
+                    <button 
+                      onClick={() => {
+                        setResumeText(res.metadata.text);
+                        setJobRole(res.metadata.job_role);
+                        setActiveTab("upload");
+                        showToast("Resume loaded from vault!", "info");
+                      }}
+                      className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
+                    >
+                      Load for Analysis →
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+
+              {vaultResults.length === 0 && !isSearchingVault && (
+                <div className="text-center text-[var(--color-muted)] mt-12">
+                  <p>Search for specific talents or technologies. Results are retrieved using vector embeddings.</p>
                 </div>
               )}
             </motion.main>
