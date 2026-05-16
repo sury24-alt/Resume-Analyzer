@@ -2,8 +2,27 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2 } from "lucide-react";
+import { UploadCloud, BrainCircuit, Target, Briefcase, Download, Loader2, Sparkles, Search, History } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast, Toaster } from "sonner";
+
+const Floating = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
+  <motion.div
+    animate={{ y: [0, -12, 0] }}
+    transition={{
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay
+    }}
+  >
+    {children}
+  </motion.div>
+);
 
 type Tab = "dashboard" | "upload" | "results" | "interview" | "intel" | "vault";
 
@@ -32,11 +51,12 @@ export default function Home() {
   const [vaultResults, setVaultResults] = useState<any[]>([]);
   const [isSearchingVault, setIsSearchingVault] = useState(false);
 
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [toastState, setToastState] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    if (type === "success") toast.success(message);
+    else if (type === "error") toast.error(message);
+    else toast(message);
   };
 
   const handleFileUpload = async (file: File) => {
@@ -246,50 +266,25 @@ export default function Home() {
 
   return (
     <>
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-xl backdrop-blur-xl border font-medium shadow-2xl max-w-sm ${
-              toast.type === "success"
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                : toast.type === "error"
-                ? "bg-red-500/15 border-red-500/30 text-red-400"
-                : "bg-indigo-500/15 border-indigo-500/30 text-indigo-400"
-            }`}
-          >
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Toaster position="top-right" richColors />
+      <div className="container mx-auto px-4 py-10 max-w-7xl min-h-screen relative">
+        <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+          <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[20%] right-[10%] w-96 h-96 bg-accent/5 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
 
-      {/* Navigation */}
-      <nav className="sticky top-0 z-40 flex flex-wrap justify-center gap-8 px-6 py-5 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/10 shadow-lg print:hidden">
-        {[
-          { id: "dashboard", label: "Dashboard" },
-          { id: "upload", label: "Upload Resume" },
-          { id: "results", label: "Analysis Results" },
-          { id: "intel", label: "Deep Intel" },
-          { id: "vault", label: "Resume Vault" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as Tab)}
-            className={`pb-1 font-medium text-lg transition-colors border-b-2 ${
-              activeTab === tab.id
-                ? "text-[var(--color-primary)] border-[var(--color-primary)]"
-                : "text-[var(--color-muted)] border-transparent hover:text-[var(--color-primary)]"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+        <nav className="flex justify-center mb-16">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Tab)} className="glass p-1 rounded-full">
+            <TabsList className="bg-transparent border-none">
+              <TabsTrigger value="dashboard" className="rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Dashboard</TabsTrigger>
+              <TabsTrigger value="upload" className="rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Analyze</TabsTrigger>
+              <TabsTrigger value="results" className="rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Results</TabsTrigger>
+              <TabsTrigger value="intel" className="rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Deep Intel</TabsTrigger>
+              <TabsTrigger value="vault" className="rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Vault</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </nav>
 
-      <div className="container max-w-6xl mx-auto px-6 py-16 flex-1">
         <AnimatePresence mode="wait">
           {/* Dashboard */}
           {activeTab === "dashboard" && (
@@ -298,55 +293,60 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center justify-center text-center min-h-[50vh]"
+              className="flex flex-col items-center text-center"
             >
-              <h1 className="text-6xl font-extrabold mb-6 font-outfit tracking-tight leading-tight">
-                AI-Powered <br />
-                <span className="text-[var(--color-primary)]">Career Command Center</span>
-              </h1>
-              <p className="text-xl text-[var(--color-muted)] mb-10 max-w-2xl">
-                Elevate your professional trajectory with intelligent resume analysis, automated job matching, and technical interview prep.
-              </p>
-              <div className="flex flex-wrap justify-center gap-5">
-                <button
-                  onClick={() => setActiveTab("upload")}
-                  className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-[#0a0a0f] px-10 py-4 rounded-full font-semibold text-lg hover:shadow-[0_6px_20px_rgba(167,139,250,0.35)] transition-all hover:-translate-y-1"
-                >
-                  🚀 Analyze Resume
-                </button>
-                <button
-                  onClick={() => setActiveTab("intel")}
-                  className="border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-10 py-4 rounded-full font-semibold text-lg hover:bg-[var(--color-primary)]/10 transition-all hover:-translate-y-1"
-                >
-                  🔍 Deep Research
-                </button>
-              </div>
+              <Floating>
+                <div className="mb-12">
+                  <div className="inline-block px-4 py-1.5 mb-6 rounded-full glass border-primary/20 text-primary text-sm font-bold tracking-wider uppercase">
+                    <Sparkles className="w-4 h-4 inline mr-2 mb-0.5" /> Next-Gen Career Command
+                  </div>
+                  <h1 className="text-7xl font-extrabold mb-6 font-outfit tracking-tight leading-tight">
+                    Your Autonomous<br />
+                    <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient-x bg-clip-text text-transparent">Career Command Center</span>
+                  </h1>
+                  <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+                    Elevate your trajectory with orchestrated intelligence, semantic search, and technical whisperers.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-5">
+                    <Button
+                      size="lg"
+                      onClick={() => setActiveTab("upload")}
+                      className="px-10 py-7 rounded-full text-lg font-bold shadow-[0_0_20px_rgba(167,139,250,0.3)] hover:scale-105 transition-all"
+                    >
+                      🚀 Analyze Resume
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setActiveTab("intel")}
+                      className="px-10 py-7 rounded-full text-lg font-bold glass hover:bg-primary/10 transition-all"
+                    >
+                      🔍 Deep Research
+                    </Button>
+                  </div>
+                </div>
+              </Floating>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 w-full">
-                <div className="glass p-8 rounded-2xl flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/20 text-2xl">
-                    📄
-                  </div>
-                  <div className="text-4xl font-extrabold text-[var(--color-primary)] mb-2">1</div>
-                  <div className="text-lg font-semibold text-[var(--color-foreground)]">Upload your Resume</div>
-                  <p className="text-[var(--color-muted)] mt-2 text-sm">Provide your current resume in PDF format for AI analysis.</p>
-                </div>
-                <div className="glass p-8 rounded-2xl flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/20 text-2xl">
-                    🧠
-                  </div>
-                  <div className="text-4xl font-extrabold text-[var(--color-primary)] mb-2">2</div>
-                  <div className="text-lg font-semibold text-[var(--color-foreground)]">AI Deep Analysis</div>
-                  <p className="text-[var(--color-muted)] mt-2 text-sm">Our AI scores your resume, detects gaps, and suggests improvements.</p>
-                </div>
-                <div className="glass p-8 rounded-2xl flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/20 text-2xl">
-                    🎯
-                  </div>
-                  <div className="text-4xl font-extrabold text-[var(--color-primary)] mb-2">3</div>
-                  <div className="text-lg font-semibold text-[var(--color-foreground)]">Smart Job Match</div>
-                  <p className="text-[var(--color-muted)] mt-2 text-sm">Get curated job recommendations tailored to your profile.</p>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mt-12">
+                {[
+                  { icon: "📄", title: "Smart Extraction", desc: "Instantly parse PDFs into structured knowledge.", delay: 0 },
+                  { icon: "🧠", title: "Orchestrated AI", desc: "3-step strategic grading and gap detection.", delay: 0.2 },
+                  { icon: "🎯", title: "Semantic Matching", desc: "Find roles based on meaning, not just keywords.", delay: 0.4 },
+                ].map((feature, i) => (
+                  <Floating key={i} delay={feature.delay}>
+                    <Card className="glass border-none h-full hover:scale-105 transition-all">
+                      <CardHeader>
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 bg-primary/15 border border-primary/20 text-2xl">
+                          {feature.icon}
+                        </div>
+                        <CardTitle className="text-2xl font-bold font-outfit">{feature.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground">{feature.desc}</p>
+                      </CardContent>
+                    </Card>
+                  </Floating>
+                ))}
               </div>
             </motion.main>
           )}
@@ -360,42 +360,46 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center text-center min-h-[60vh]"
             >
-              <h1 className="text-5xl font-extrabold mb-4 font-outfit">
+              <h1 className="text-6xl font-extrabold mb-4 font-outfit tracking-tight">
                 Analyze your resume.<br />
-                <span className="text-[var(--color-primary)]">Stand out.</span>
+                <span className="text-primary">Stand out.</span>
               </h1>
-              <p className="text-xl text-[var(--color-muted)] mb-10 h-8">ATS optimization. Skill detection. Job matching.</p>
+              <p className="text-xl text-muted-foreground mb-10 h-8 uppercase tracking-widest text-sm font-bold">ATS optimization • Skill detection • Job matching</p>
 
-              <label className="w-full max-w-xl h-72 border-2 border-dashed border-[var(--color-primary)]/30 rounded-2xl bg-[var(--color-surface)] backdrop-blur-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 hover:shadow-[0_0_30px_rgba(167,139,250,0.15)] mb-8 group">
+              <label className="w-full max-w-xl h-80 border-2 border-dashed border-primary/30 rounded-3xl bg-surface/5 backdrop-blur-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary hover:bg-primary/5 hover:shadow-[0_0_50px_rgba(167,139,250,0.1)] mb-8 group">
                 <input
                   type="file"
                   accept=".pdf"
                   className="hidden"
                   onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
                 />
-                <UploadCloud className="w-16 h-16 text-[var(--color-primary)] mb-5 group-hover:-translate-y-1 transition-transform" />
-                <p className="text-lg font-medium mb-2 text-[var(--color-foreground)]">Drag & Drop or Click to Upload</p>
-                <p className="text-[var(--color-muted)] text-sm mb-4">PDF file up to 5MB</p>
-                {uploadStatus && <div className="text-[var(--color-success)] font-semibold">{uploadStatus}</div>}
+                <Floating>
+                  <UploadCloud className="w-20 h-20 text-primary mb-5" />
+                </Floating>
+                <p className="text-xl font-bold mb-2 text-foreground">Drag & Drop or Click to Upload</p>
+                <p className="text-muted-foreground text-sm mb-4">High-fidelity PDF processing</p>
+                {uploadStatus && <div className="text-success font-bold flex items-center gap-2"><Sparkles className="w-4 h-4" /> {uploadStatus}</div>}
               </label>
 
-              <div className="w-full max-w-xl text-left mb-8">
-                <label className="block font-semibold mb-2 text-[var(--color-foreground)]">Target Job Role (Required for Analysis)</label>
-                <input
+              <div className="w-full max-w-xl text-left mb-10">
+                <label className="block font-bold mb-3 text-foreground ml-1">Target Job Role</label>
+                <Input
                   type="text"
                   value={jobRole}
                   onChange={(e) => setJobRole(e.target.value)}
-                  placeholder="e.g. Senior Frontend Developer, Data Scientist"
-                  className="w-full p-4 border border-[var(--color-border)] rounded-xl bg-white/5 text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                  placeholder="e.g. Senior Product Architect"
+                  className="h-14 glass border-none rounded-xl px-6 focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
-              <button
+              <Button
+                size="lg"
                 onClick={handleAnalyze}
-                className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-[#0a0a0f] px-10 py-4 rounded-xl font-semibold text-lg hover:shadow-[0_6px_20px_rgba(167,139,250,0.35)] transition-all hover:-translate-y-1 flex items-center gap-2"
+                disabled={isAnalyzing}
+                className="px-12 py-8 rounded-full text-xl font-bold bg-gradient-to-br from-primary to-accent text-black shadow-xl hover:scale-105 transition-all"
               >
-                Start Analysis <BrainCircuit className="w-5 h-5" />
-              </button>
+                {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : "Start Analysis"} <BrainCircuit className="w-6 h-6 ml-2" />
+              </Button>
             </motion.main>
           )}
 
@@ -607,69 +611,79 @@ export default function Home() {
               className="min-h-[60vh]"
             >
               <div className="text-center mb-12">
-                <h2 className="text-5xl font-extrabold font-outfit mb-3">
-                  Resume <span className="text-[var(--color-primary)]">Vault</span>
+                <h2 className="text-6xl font-extrabold font-outfit mb-3">
+                  Resume <span className="text-primary">Vault</span>
                 </h2>
-                <p className="text-xl text-[var(--color-muted)]">Semantic search powered by Pinecone Serverless.</p>
+                <p className="text-xl text-muted-foreground">Vector-optimized semantic retrieval.</p>
               </div>
 
               <div className="max-w-3xl mx-auto mb-12">
-                <div className="glass p-8 rounded-2xl flex gap-4">
-                  <input
-                    type="text"
-                    value={vaultQuery}
-                    onChange={(e) => setVaultQuery(e.target.value)}
-                    placeholder="Search by skill, experience, or role (e.g. 'React developers with AWS')"
-                    className="flex-1 p-4 border border-[var(--color-border)] rounded-xl bg-white/5 text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-primary)] transition-all"
-                    onKeyDown={(e) => e.key === "Enter" && handleVaultSearch()}
-                  />
-                  <button
-                    onClick={handleVaultSearch}
-                    disabled={isSearchingVault}
-                    className="bg-[var(--color-primary)] text-[#0a0a0f] px-8 py-4 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    {isSearchingVault ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
-                  </button>
-                </div>
+                <Card className="glass border-none overflow-hidden p-2">
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={vaultQuery}
+                      onChange={(e) => setVaultQuery(e.target.value)}
+                      placeholder="Search semantic history... (e.g. 'Senior engineers with Kubernetes')"
+                      className="flex-1 h-16 border-none bg-transparent px-6 text-lg focus-visible:ring-0"
+                      onKeyDown={(e) => e.key === "Enter" && handleVaultSearch()}
+                    />
+                    <Button
+                      size="lg"
+                      onClick={handleVaultSearch}
+                      disabled={isSearchingVault}
+                      className="h-16 px-10 rounded-xl font-bold bg-primary text-black"
+                    >
+                      {isSearchingVault ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                    </Button>
+                  </div>
+                </Card>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                {vaultResults.map((res) => (
-                  <motion.div
-                    key={res.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="glass p-6 rounded-2xl border-white/5 hover:border-[var(--color-primary)]/30"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                        {res.metadata.job_role}
-                      </span>
-                      <span className="text-[var(--color-muted)] text-xs font-mono">
-                        Match: {(res.score * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <p className="text-[var(--color-foreground)] line-clamp-4 text-sm mb-4 italic">
-                      &quot;{res.metadata.text}...&quot;
-                    </p>
-                    <button 
-                      onClick={() => {
-                        setResumeText(res.metadata.text);
-                        setJobRole(res.metadata.job_role);
-                        setActiveTab("upload");
-                        showToast("Resume loaded from vault!", "info");
-                      }}
-                      className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
-                    >
-                      Load for Analysis →
-                    </button>
-                  </motion.div>
+                {vaultResults.map((res, i) => (
+                  <Floating key={res.id} delay={i * 0.1}>
+                    <Card className="glass border-none h-full hover:border-primary/30 transition-all cursor-default group">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                            {res.metadata.job_role}
+                          </span>
+                          <span className="text-muted-foreground text-[10px] font-mono">
+                            {(res.score * 100).toFixed(1)}% MATCH
+                          </span>
+                        </div>
+                        <CardTitle className="text-lg font-bold font-outfit line-clamp-1">Result Profile</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground text-sm mb-6 line-clamp-3 leading-relaxed italic border-l-2 border-primary/20 pl-4">
+                          &quot;{res.metadata.text}...&quot;
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full border border-primary/20 hover:bg-primary/10 text-primary font-bold"
+                          onClick={() => {
+                            setResumeText(res.metadata.text);
+                            setJobRole(res.metadata.job_role);
+                            setActiveTab("upload");
+                            showToast("Resume loaded from vault!", "info");
+                          }}
+                        >
+                          Restore & Analyze <History className="w-4 h-4 ml-2" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Floating>
                 ))}
               </div>
 
               {vaultResults.length === 0 && !isSearchingVault && (
-                <div className="text-center text-[var(--color-muted)] mt-12">
-                  <p>Search for specific talents or technologies. Results are retrieved using vector embeddings.</p>
+                <div className="text-center text-muted-foreground mt-24 opacity-50">
+                  <Floating>
+                    <Search className="w-12 h-12 mx-auto mb-4" />
+                  </Floating>
+                  <p className="text-lg font-outfit tracking-widest uppercase text-xs">Awaiting Semantic Query</p>
                 </div>
               )}
             </motion.main>

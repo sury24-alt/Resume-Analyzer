@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Outfit, Poppins } from "next/font/google";
+import { Outfit, Poppins, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 const poppins = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], variable: "--font-poppins" });
@@ -16,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${poppins.variable}`}>
+    <html lang="en" className={cn(outfit.variable, poppins.variable, "font-sans", geist.variable)}>
       <body className="min-h-screen font-sans flex flex-col">
         {children}
       </body>
