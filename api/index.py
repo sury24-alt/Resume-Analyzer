@@ -202,34 +202,39 @@ async def research_company(data: ResearchRequest):
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not configured")
     
     try:
-        # Use LiteLLMModel to connect smolagents to Groq
-        # Note: LiteLLM uses 'groq/' prefix for groq models
-        model = LiteLLMModel(
-            model_id="groq/llama-3.3-70b-versatile",
-            api_key=api_key
-        )
-        
+        # To avoid Vercel's 10-second timeout, we'll do a quick direct search
+        # and then process it in one shot rather than using a multi-step agent.
         search_tool = DuckDuckGoSearchTool()
-        # CodeAgent is the autonomous agent that can write code to solve tasks
-        agent = CodeAgent(tools=[search_tool], model=model, add_base_tools=True)
+        search_query = f"{data.company_name} recent news core values interview questions for {data.job_role}"
+        
+        # Get raw search results (quick)
+        search_results = search_tool(search_query)
         
         prompt = f"""
-        Research the company '{data.company_name}' for a candidate applying for the '{data.job_role}' position.
+        You are a Strategic Career Intelligence Agent. 
+        Research has been performed for '{data.company_name}' and the role '{data.job_role}'.
         
-        Your goal is to provide 'Strategic Intelligence' that helps the candidate stand out in interviews.
-        1. Find 2-3 recent news items or major achievements of the company from the last year.
-        2. Identify their core values, mission, or corporate culture based on their official statements.
-        3. Search for common interview themes or the technical stack used at {data.company_name} for {data.job_role} roles.
-        4. Provide 3 specific, insightful 'Power Questions' the candidate should ask the interviewer to show they've done their homework.
+        RAW SEARCH DATA:
+        {search_results}
         
-        Format your final answer in clean, professional Markdown.
+        Using the search data above (and your internal knowledge), provide a 'Strategic Intelligence Report' in Markdown:
+        1. **Recent News**: 2-3 major achievements or news items from the last year.
+        2. **Culture & Values**: Core mission and workplace culture.
+        3. **Interview Intel**: Common themes, technical stack, or expectations for {data.job_role}.
+        4. **Power Questions**: 3 high-level questions for the candidate to ask.
+        
+        Be professional, concise, and insightful.
         """
         
-        result = agent.run(prompt)
-        return {"result": str(result)}
+        # Fast one-shot call to Groq
+        result = ask_groq(prompt)
+        return {"result": result}
     except Exception as e:
-        print(f"Agent Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Research Error: {str(e)}")
+        # Fallback if search fails - still provide some AI insight
+        prompt = f"Provide strategic interview intelligence for {data.company_name} and the role {data.job_role} based on your general knowledge. Include news, culture, and 3 power questions."
+        result = ask_groq(prompt)
+        return {"result": result}
 
 
 @app.post("/api/extract_pdf")
