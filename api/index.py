@@ -12,7 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel
 from pinecone import Pinecone, ServerlessSpec
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 import uuid
 
 load_dotenv()
@@ -244,7 +244,10 @@ async def analyze_route(data: AnalyzeRequest):
         # --- NEW: Store in Pinecone for "Antigravity" Vibes ---
         if pinecone_index:
             try:
-                embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+                embeddings = HuggingFaceInferenceAPIEmbeddings(
+                    api_key=os.getenv("HUGGINGFACE_API_KEY", ""),
+                    model_name="sentence-transformers/all-MiniLM-L6-v2"
+                )
                 vector = embeddings.embed_query(data.resume_text)
                 pinecone_index.upsert(
                     vectors=[{
@@ -366,7 +369,10 @@ async def search_vault(data: VaultSearchRequest):
         raise HTTPException(status_code=500, detail="Pinecone not configured")
     
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        embeddings = HuggingFaceInferenceAPIEmbeddings(
+            api_key=os.getenv("HUGGINGFACE_API_KEY", ""),
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
         query_vector = embeddings.embed_query(data.query)
         
         results = pinecone_index.query(

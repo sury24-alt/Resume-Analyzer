@@ -9,5 +9,6 @@ langchain-groq
 langchain-core
 smolagents
 duckduckgo-search
-pinecone-client
+pinecone
 langchain-huggingface
+langchain-community
