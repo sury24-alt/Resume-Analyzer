@@ -229,17 +229,14 @@ async def analyze_route(data: AnalyzeRequest):
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not configured")
     
     try:
-        # Orchestration Step 1: Grade the Resume
-        grading_chain = RESUME_GRADER_PROMPT | chat | StrOutputParser()
-        grade = grading_chain.invoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        # Orchestration: Run steps in parallel for speed
+        import asyncio
         
-        # Orchestration Step 2: Optimize Keywords
-        keyword_chain = KEYWORD_OPTIMIZER_PROMPT | chat | StrOutputParser()
-        keywords = keyword_chain.invoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        grading_task = (RESUME_GRADER_PROMPT | chat | StrOutputParser()).ainvoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        keyword_task = (KEYWORD_OPTIMIZER_PROMPT | chat | StrOutputParser()).ainvoke({"resume_text": data.resume_text, "job_role": data.job_role})
+        job_task = (ORCHESTRATED_JOB_MATCHER_PROMPT | chat | StrOutputParser()).ainvoke({"resume_text": data.resume_text})
         
-        # Orchestration Step 3: Match Jobs
-        job_chain = ORCHESTRATED_JOB_MATCHER_PROMPT | chat | StrOutputParser()
-        jobs = job_chain.invoke({"resume_text": data.resume_text})
+        grade, keywords, jobs = await asyncio.gather(grading_task, keyword_task, job_task)
         
         # --- NEW: Store in Pinecone for "Antigravity" Vibes ---
         if pinecone_index:
@@ -261,7 +258,7 @@ async def analyze_route(data: AnalyzeRequest):
                     }]
                 )
             except Exception as e:
-                print(f"Pinecone Upsert Error: {e}")
+                print(f"⚠️ Pinecone Vault Error (skipping): {e}")
 
         # Combine results
         final_report = f"""
